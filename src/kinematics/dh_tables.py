@@ -1,7 +1,16 @@
 from math import pi
 import numpy as np
 
-class Config4V3:
+class Configuration:
+    @staticmethod
+    def _judge(angles, position):
+        pass
+    def left(angles):
+        pass
+    def right(angles):
+        pass
+
+class Config4V3(Configuration):
     
     @staticmethod
     def _judge(angles, position):
