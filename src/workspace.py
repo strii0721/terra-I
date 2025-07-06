@@ -18,7 +18,7 @@ if __name__ == "__main__":
         for la_j2 in la_j2s:
             for la_j3 in la_j3s:
                 angles = [la_j1, la_j2, la_j3]
-                T_left, _ = kcal.forward_kinematics(angles, dh_tables.config4_v3)
+                T_left = kcal.forward_kinematics(dh_tables.Config4V3.left(angles))
                 xyz = T_left[:3, 3]
                 workspace_left.append(xyz)
     workspace_left = np.array(workspace_left)
@@ -27,8 +27,8 @@ if __name__ == "__main__":
     for ra_j1 in ra_j1s:
         for ra_j2 in ra_j2s:
             for ra_j3 in ra_j3s:
-                angles = [0,0,0, ra_j1, ra_j2, ra_j3]
-                _, T_right = kcal.forward_kinematics(angles, dh_tables.config4_v3)
+                angles = [ra_j1, ra_j2, ra_j3]
+                T_right = kcal.forward_kinematics(dh_tables.Config4V3.right(angles))
                 xyz = T_right[:3, 3]
                 workspace_right.append(xyz)
     workspace_right = np.array(workspace_right)
