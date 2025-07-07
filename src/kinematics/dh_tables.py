@@ -11,7 +11,6 @@ class Configuration:
         pass
 
 class Config4V3(Configuration):
-    
     @staticmethod
     def _judge(angles, position):
         if position == "left":
