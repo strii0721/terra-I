@@ -29,14 +29,14 @@ class Config4V3(Configuration):
             [la_j1, 5.3, 30.891, pi/2],
             [la_j2, 0, 269.91, -pi/2],
             [la_j3, 22.8, 250, 0]
-        ])
+        ], dtype = np.float64)
         
     def right(angles):
-        ra_j1, ra_j2, ra_j3 = Config4V3._judge(angles, "left")
+        ra_j1, ra_j2, ra_j3 = Config4V3._judge(angles, "right")
         return np.array([
             # [theta,   d,  a,  alpha]
             [0, 0, 354.9, pi/2],
             [ra_j1, -128.8, 30.891, pi/2],
             [ra_j2, 0, 269.91, -pi/2],
             [ra_j3, 22.8, 250, 0]
-        ])
+        ], dtype = np.float64)

@@ -2,8 +2,8 @@ import kinematics.dh_tables as dh_tables
 import kinematics.calculation as kcal
 from math import pi
 
-angles_init = [0,0,-pi]
-angles = [-pi/4, 0, pi/3]
+angles_init = [0, 0, -pi]
+angles = [0, 0, -3*pi/2]
 
 po_target = kcal.forward_kinematics(dh_tables.Config4V3.left(angles))
 
