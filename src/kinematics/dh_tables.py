@@ -3,11 +3,39 @@ import numpy as np
 
 class Configuration:
     @staticmethod
-    def _judge(angles, position):
+    def _judge(angles, 
+               position):
+        """Match input angle list.
+
+        Args:
+            angles (list):      Angles input.
+            position (string):  Determine "left" or "right" arm
+
+        Returns:
+            tuple: Angles input of a specific arm.
+        """
         pass
+    
     def left(angles):
+        """Construct a D-H table from input angles.
+
+        Args:
+            angles (np.array(list)):  Input angles.
+
+        Returns:
+            np.array(list): D-H table of a specific arm.
+        """
         pass
+    
     def right(angles):
+        """Construct a D-H table from input angles.
+
+        Args:
+            angles (np.array(list)):  Input angles.
+
+        Returns:
+            np.array(list): D-H table of a specific arm.
+        """
         pass
 
 class Config4V3(Configuration):
