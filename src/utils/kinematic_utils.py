@@ -148,11 +148,11 @@ class KinematicUtils:
     
     def calculate_dh_parameters(endpoint_vector,
                                 rotation_direction):
-        """Perform standard D-H analysis with a relative joint coordinate and rotation direction. Generate standard D-H parameters: theta, d, a, alpha.
+        """Perform standard D-H analysis with a relative joint coordinate and rotation direction. Generate standard D-H parameters: theta, d, a, alpha. Please refer to the documentation in the docs folder in the project root directory for the formula derivation.
     
         Args:
             endpoint_vector (np.array(list)):       A vector pointing from the previous joint to the current joint, i.e. the coordinates of current joint relative to the previous reference frame.
-            rotation_direction (np.array(list)):    Vector of joint rotation direction。
+            rotation_direction (np.array(list)):    Vector of joint rotation direction.
     
         Returns:
             tuple: Standard D-H parameters: theta, d, a, alpha.

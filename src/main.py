@@ -1,9 +1,7 @@
 import kinematics.dh_tables as dh_tables
 from utils.kinematic_utils import KinematicUtils
 from utils.three_dim_calculation import ThreeDimCalculation
-from math import pi
-from dk.logger.log4p import Log4P
-from mechanics.joint import Joint
+
 import numpy as np
 
 # angles_init = [0, 0, pi]
@@ -23,8 +21,8 @@ import numpy as np
 
 # print(joint.axis_direction)
 
-endpoint_vector = np.array([354.9, 128.8, 0])
-direction_vector = ThreeDimCalculation.convert_to_unit_vector(np.array([0,-1,0]))
+endpoint_vector = np.array([0, 0, 0])
+direction_vector = ThreeDimCalculation.convert_to_unit_vector(np.array([0, 1, 1]))
 
 theta, d, a, alpha = KinematicUtils.calculate_dh_parameters(endpoint_vector, 
                                               direction_vector)
