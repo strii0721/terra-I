@@ -9,6 +9,6 @@ class Link:
                  translation_distance,
                  visibility = True):
         self.type = CT.LINK
-        self.translation_direction = ThreeDimCalculation.convert_to_unit_vector(np.array(translation_direction))
+        self.translation_direction = ThreeDimCalculation.convert_to_unit_vector(translation_direction)
         self.translation_distance = translation_distance
         self.visibility = visibility

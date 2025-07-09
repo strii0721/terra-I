@@ -29,7 +29,7 @@ class KinematicUtils:
         ], dtype = np.float64)
     
     def forward_kinematics(dh_table, 
-                           joint_no = None):
+                           names = None):
         """Perform forward kinematic analysis.
     
         Args:
@@ -37,16 +37,20 @@ class KinematicUtils:
             joint_no (int):            Target joint number.
     
         Returns:
-            np.array(list): position-orientation matrix of target joint.
+            set(np.array(list)): Position-orientation matrix of joints from base to tip.
         """
         
-        if joint_no is None: joint_no = len(dh_table)
         T = np.eye(4)
+        po_matrixs = {}
         for idx, row in enumerate(dh_table):
             Ti = KinematicUtils._dh_transform(*row)
             T = T @ Ti
-            if idx + 1 == joint_no: return T
-        return T
+            if names is None: 
+                name = str(idx)
+            else:
+                name = names[idx]
+            po_matrixs[name] = T
+        return po_matrixs
     
     # def damped_pinv(J, damping=0.01):
     #     JT = J.T
@@ -84,8 +88,8 @@ class KinematicUtils:
         J = np.vstack([np.array(Jv).T, np.array(Jw).T])
         return J
     
-    def _calculate_error(po_target, 
-                   po_current):
+    def _calculate_error(po_target,
+                         po_current):
         """Calculating position-orientation error in the numerical solution process of inverse kinematics.
     
         Args:
