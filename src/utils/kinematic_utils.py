@@ -48,7 +48,10 @@ class KinematicUtils:
             if names is None: 
                 name = str(idx)
             else:
-                name = names[idx]
+                if idx == len(names):
+                    name = "enf"
+                else:
+                    name = names[idx]
             po_matrixs[name] = T
         return po_matrixs
     
@@ -179,3 +182,14 @@ class KinematicUtils:
         theta = ThreeDimCalculation.calculate_rotation_angle_rad(x, oo, z)
         alpha = ThreeDimCalculation.calculate_rotation_angle_rad(z, rotation_direction, oo)
         return theta, d, a, alpha
+    
+    def calculate_lam(endpoint_vector,
+                      rotation_direction):
+        x_p, y_p, z_p = endpoint_vector
+        x_r, y_r, z_r = rotation_direction
+        
+        if x_r**2 + y_r**2 == 0:
+            lam = -(x_p * x_r + y_p * y_r + z_p * z_r)/(x_r**2 + y_r**2 + z_r**2)
+        else:
+            lam = - (x_p * x_r + y_p * y_r)/(x_r**2 + y_r**2)
+        return lam

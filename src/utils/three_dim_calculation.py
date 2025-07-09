@@ -14,7 +14,7 @@ class ThreeDimCalculation:
         """
         
         magnitude = sqrt(sum(v**2 for v in vector))
-        unit_vector = [v / magnitude for v in vector]
+        unit_vector = vector / magnitude
         return unit_vector
     
     def extend(current_vector, 

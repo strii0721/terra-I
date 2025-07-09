@@ -56,7 +56,7 @@ class Assembly:
         last_input = 0
         consecutive_endpoint_vector = np.array([0, 0, 0])
         last_rotation_direction = np.array([0, 0, 1])
-        dh_table = np.array([])
+        dh_table = np.empty((0, 4))
         
         for idx, key in enumerate(self.components.keys()):
             match self.components[key].type:
@@ -65,22 +65,26 @@ class Assembly:
                                                                              self.components[key].translation_direction,
                                                                              self.components[key].translation_distance)
                     if idx == len(self.components) - 1:
-                        dh_parameters = KinematicUtils.calculate_dh_parameters(consecutive_endpoint_vector,
-                                                                               last_rotation_direction)
-                        dh_parameters = list(dh_parameters)
+                        dh_parameters = (0, 
+                                         consecutive_endpoint_vector[2],
+                                         consecutive_endpoint_vector[0],
+                                         0)
+                        dh_parameters = np.array(dh_parameters)
                         last_rotation_rad = last_input
                         dh_parameters[0] += last_rotation_rad
-                        dh_table.append(dh_parameters)
+                        dh_table = np.vstack([dh_table, dh_parameters.reshape(1, 4)])
                 case CT.ROTATION_JOINT:
                     rotation_direction = self.components[key].axis_direction
                     dh_parameters = KinematicUtils.calculate_dh_parameters(consecutive_endpoint_vector,
                                                                            rotation_direction)
-                    dh_parameters = list(dh_parameters)
+                    lam = KinematicUtils.calculate_lam(consecutive_endpoint_vector,
+                                                       rotation_direction)
+                    consecutive_endpoint_vector = np.array([0, 0, -lam])
+                    dh_parameters = np.array(dh_parameters)
                     last_rotation_rad = last_input
                     dh_parameters[0] += last_rotation_rad
-                    dh_table.append(dh_parameters)
-                    
-                    rotation_rad = next(inputs_enum)
+                    dh_table = np.vstack([dh_table, dh_parameters.reshape(1, 4)])
+                    _, rotation_rad = next(inputs_enum)
                     last_input = rotation_rad
                     
         return dh_table
@@ -99,28 +103,28 @@ class Assembly:
         if len(inputs) != self.rotation_joint_num + self.prismatic_joint_num:
             raise Exception("The number of input signals does not match the number of joints...")
         inputs_enum = enumerate(inputs)
-        modified_dh_table = np.array([])
+        modified_dh_table = np.empty((0, 4))
         
         for key in self.components.keys():
             match self.components[key].type:
                 case CT.LINK:
-                    endpoint_vector = ThreeDimCalculation.extend(endpoint_vector,
+                    endpoint_vector = ThreeDimCalculation.extend(np.array([0, 0, 0]),
                                                                  self.components[key].translation_direction,
                                                                  self.components[key].translation_distance)
                     rotation_direction = np.array([0, 0, 1])
                     modified_dh_parameters = KinematicUtils.calculate_dh_parameters(endpoint_vector, 
                                                                                     rotation_direction)
-                    modified_dh_parameters = list(modified_dh_parameters)
-                    modified_dh_table.append(modified_dh_parameters)
+                    modified_dh_parameters = np.array(modified_dh_parameters)
+                    modified_dh_table = np.vstack([modified_dh_table, modified_dh_parameters.reshape(1, 4)])
                 case CT.ROTATION_JOINT:
                     endpoint_vector = np.array([0, 0, 0])
                     rotation_direction = self.components[key].axis_direction
                     modified_dh_parameters = KinematicUtils.calculate_dh_parameters(endpoint_vector,
                                                                                     rotation_direction)
-                    modified_dh_parameters = list(modified_dh_parameters)
-                    rotation_rad = next(inputs_enum)
+                    modified_dh_parameters = np.array(modified_dh_parameters)
+                    _, rotation_rad = next(inputs_enum)
                     modified_dh_parameters[0] += rotation_rad
-                    modified_dh_table.append(modified_dh_parameters)
+                    modified_dh_table = np.vstack([modified_dh_table, modified_dh_parameters.reshape(1, 4)])
                     
         return modified_dh_table
                     

@@ -16,9 +16,9 @@ left_arm.construct("link_0-0",
         .construct("link_1-0", 
                    Link(np.array([1, 0, 0]), 30.891))\
         .construct("link_1-1", 
-                   Link(np.array([0, 0, 1]), 19.45))\
+                   Link(np.array([0, -1, 0]), 19.45))\
         .construct("la-j2", 
-                   RotationJoint(np.array([0, 0, 1])))\
+                   RotationJoint(np.array([0, -1, 0])))\
         .construct("link_2-0", 
                    Link(np.array([0, 0, -1]), 19.45))\
         .construct("link_2-1", 
@@ -31,12 +31,25 @@ left_arm.construct("link_0-0",
                    Link(np.array([1, 0, 0]), 250))
 
 inputs = [0, 0, 0]
-po_matrix = left_arm.get_po_matrixs(inputs)
-fullscale_po_matrix = left_arm.get_fullscale_po_matrixs(inputs)
+po_matrixs = left_arm.get_po_matrixs(inputs)
+# fullscale_po_matrix = left_arm.get_fullscale_po_matrixs(inputs)
 origin_po_matrixs = KinematicUtils.forward_kinematics(Config4V3.left(inputs))
 
-print(f"{po_matrix}")
+# print(f"{left_arm.get_dh_table(inputs)}")
+# print(f"================")
+# print(f"{Config4V3.left(inputs)}")
+
+for key in po_matrixs.keys():
+    print(f"{key}:\n")
+    print(f"{po_matrixs[key]}")
 print(f"=======================================")
-print(f"{fullscale_po_matrix}")
+# for key in fullscale_po_matrix.keys():
+#     print(f"{key}:\n")
+#     print(f"{fullscale_po_matrix[key]}")
 print(f"=======================================")
-print(f"{origin_po_matrixs}")
+for key in origin_po_matrixs.keys():
+    print(f"{key}:\n")
+    print(f"{origin_po_matrixs[key]}")
+
+# print(f"{KinematicUtils.calculate_dh_parameters(np.array([30.891,-19.45,0]), np.array([0,-1,0]))}")
+
