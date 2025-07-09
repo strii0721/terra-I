@@ -1,6 +1,6 @@
 from math import pi
 import numpy as np
-import kinematics.calculation as kcal
+import utils.kinematic_utils as kcal
 import kinematics.dh_tables as dh_tables
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection

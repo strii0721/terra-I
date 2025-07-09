@@ -1,14 +1,31 @@
 import kinematics.dh_tables as dh_tables
-import kinematics.calculation as kcal
+from utils.kinematic_utils import KinematicUtils
+from utils.three_dim_calculation import ThreeDimCalculation
 from math import pi
+from dk.logger.log4p import Log4P
+from mechanics.joint import Joint
+import numpy as np
 
-angles_init = [0, 0, -pi]
-angles = [0, 0, -3*pi/2]
+# angles_init = [0, 0, pi]
+# angles = [0, 0, -pi/2]
 
-po_target = kcal.forward_kinematics(dh_tables.Config4V3.left(angles))
+# po_target = kcal.forward_kinematics(dh_tables.Config4V3.left(angles))
 
-angles_target = kcal.inverse_kinematics(dh_tables.Config4V3.left,
-                                        po_target,
-                                        angles_init)
+# angles_target = kcal.inverse_kinematics(dh_tables.Config4V3.left,
+#                                         po_target,
+#                                         angles_init)
 
-print(f"{angles_target}")
+# print(f"{angles_target}")
+# logger = Log4P()
+# logger.info("test")
+
+# joint = Joint([5,5,5])
+
+# print(joint.axis_direction)
+
+endpoint_vector = np.array([354.9, 128.8, 0])
+direction_vector = ThreeDimCalculation.convert_to_unit_vector(np.array([0,-1,0]))
+
+theta, d, a, alpha = KinematicUtils.calculate_dh_parameters(endpoint_vector, 
+                                              direction_vector)
+print(f"theta={theta}, d={d}, a={a}, alpha={alpha}")
