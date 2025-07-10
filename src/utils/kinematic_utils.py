@@ -28,12 +28,12 @@ class KinematicUtils:
             [0, 0, 0, 1]
         ], dtype = np.float64)
     
-    def forward_kinematics(dh_table:np.typing.NDArray, 
+    def forward_kinematics(dh_table:list, 
                            names: list | None = None) -> dict:
         """Perform forward kinematic analysis to reference frames.
     
         Args:
-            dh_table (np.typing.NDArray):   Target D-H table.
+            dh_table (list):   Target D-H table.
             names (list):                   Target joint number.
     
         Returns:
@@ -76,7 +76,7 @@ class KinematicUtils:
         #     Ts.append(Ts[-1] @ Ti)
         for idx in range(joints_num):
             Ts.append(KinematicUtils.forward_kinematics(dh_table = dh_table, 
-                                         joint_no = idx + 1))
+                                                        joint_no = idx + 1))
         zs = []
         ps = []
         for T in Ts:
@@ -118,14 +118,14 @@ class KinematicUtils:
     def inverse_kinematics(dh_table_config, 
                            po_target, 
                            angles_init, 
-                           max_iters = 10000, 
+                           max_iteration = 10000, 
                            shreshold = 1e-3, 
                            learning_rate = 0.01):
         """Perform forward kinematic analysis.
     
         Args:
             dh_table_config (function):     Config function of D-H table.
-            po_target (np.typing.NDArray):     Target position-orientation matirx.
+            po_target (np.typing.NDArray):  Target position-orientation matirx.
             angles_init (list):             Initial angles of each joints
             max_iters (int):                Maximum number of iterations.
             shreshold (float):              Threshold of error vector norm.
@@ -136,7 +136,7 @@ class KinematicUtils:
         """
         
         angles_current = np.array(angles_init, dtype=np.float64)
-        for i in range(max_iters):
+        for i in range(max_iteration):
             dh_table = dh_table_config(angles_current)
             po_current = KinematicUtils.forward_kinematics(dh_table)
             po_error = KinematicUtils._calculate_error(po_target, po_current)
@@ -181,7 +181,7 @@ class KinematicUtils:
         z = np.array([0, 0, 1])
         theta = ThreeDimCalculation.calculate_rotation_angle_rad(x, oo, z)
         alpha = ThreeDimCalculation.calculate_rotation_angle_rad(z, rotation_direction, oo)
-        return theta, d, a, alpha
+        return (theta, d, a, alpha)
     
     def calculate_lam(endpoint_vector:np.typing.NDArray,
                       rotation_direction:np.typing.NDArray) -> float:

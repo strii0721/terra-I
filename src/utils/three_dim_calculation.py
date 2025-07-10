@@ -17,22 +17,6 @@ class ThreeDimCalculation:
         unit_vector = vector / magnitude
         return unit_vector
     
-    def extend(current_vector, 
-               direction_vector, 
-               extend_distance):
-        """Extend the vector along the given starting point, direction, and length.
-    
-        Args:
-            current_vector (np.array(list)):    A given vector.
-            direction_vector (np.array(list)):  Direction of vector extension.
-            extend_distance (np.array(list)):   Distance of vector extension.
-    
-        Returns:
-            np.array(list): A vector pointing from the starting point to the end point.
-        """
-        extended_vector = current_vector + direction_vector * extend_distance
-        return extended_vector
-    
     def calculate_rotation_angle_rad(start_vector, 
                                      end_vector, 
                                      normal):

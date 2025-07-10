@@ -9,5 +9,5 @@ class RotationJoint:
                  visibility = True
                  ):
         self.type:CT = CT.ROTATION_JOINT
-        self.axis_direction:np.typing.NDArray = ThreeDimCalculation.convert_to_unit_vector(np.array(axis_direction))
+        self.axis_direction:np.typing.NDArray = np.asarray(ThreeDimCalculation.convert_to_unit_vector(np.array(axis_direction)), dtype = np.float64)
         self.visibility:bool = visibility

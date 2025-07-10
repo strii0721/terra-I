@@ -5,10 +5,8 @@ from model.components.compunent_types import ComponentTypes as CT
 class Link:
     
     def __init__(self, 
-                 translation_direction,
-                 translation_distance,
+                 endpoint_vector,
                  visibility = True):
         self.type:CT = CT.LINK
-        self.translation_direction:np.typing.NDArray = ThreeDimCalculation.convert_to_unit_vector(translation_direction)
-        self.translation_distance:float = translation_distance
+        self.endpoint_vector:np.typing.NDArray = np.asarray(endpoint_vector, dtype=np.float64)
         self.visibility:bool = visibility

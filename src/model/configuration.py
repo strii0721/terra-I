@@ -1,6 +1,6 @@
 import numpy as np
 from utils.kinematic_utils import KinematicUtils
-from utils.three_dim_calculation import ThreeDimCalculation
+from numpy import sin as s, cos as c
 from model.components.compunent_types import ComponentTypes as CT
 import pandas as pd
 
@@ -15,12 +15,18 @@ class Configuration:
             "name",
             "entity",
             "bound_reference_frames",
-            "compensate_transformation_matrix"
+            "compensate_transformation_matrix",
+            "po_matrix"
         ])
         self.components["compensate_transformation_matrix"] = self.components["compensate_transformation_matrix"].astype(object)
+        self.components["po_matrix"] = self.components["po_matrix"].astype(object)
         self.reference_frames:pd.DataFrame = pd.DataFrame(columns = [
-            "name"
+            "name",
+            "dh_parameters",
+            "po_matrix"
         ])
+        self.reference_frames["po_matrix"] = self.reference_frames["po_matrix"].astype(object)
+        self.inverse_kinematics_enabled = []
     
     def construct(self, 
                   name, 
@@ -32,7 +38,7 @@ class Configuration:
             component (np.typing.NDArray): A component.
     
         Returns:
-            Assembly: Returns the current instance for chained calls.
+            Configuration: Returns the current instance for chained calls.
         """
         if name in self.components.keys():
             raise Exception("Name conflict...")
@@ -49,7 +55,7 @@ class Configuration:
             {"name": name, "entity": component}
             ])
         self.components = pd.concat([self.components, new_row], ignore_index = True)
-        return self
+        return self            
     
     def confirm_construct(self) -> None:
         """Actions after configuration construct completed.
@@ -60,7 +66,6 @@ class Configuration:
             None.
         """
         self.bind_reference_frame()
-        self.calculate_compensation_transformation_matrix()
         
     def bind_reference_frame(self) -> None:
         """Automatically create coordinate systems that comply with standard D-H analysis based on configuration and bind them.
@@ -91,22 +96,24 @@ class Configuration:
                         ])
                     self.reference_frames = pd.concat([self.reference_frames, new_row], ignore_index = True)
     
-    def calculate_compensation_transformation_matrix(self) -> None:
+    def calculate_compensation_transformation_matrix(self,
+                                                     inputs:list) -> None:
         """Calculate the transformation matrix between each component and its bound reference frame.
     
         Args:
+            inputs (list): Input sequence.
     
         Returns:
             None.
         """
-        consecutive_endpoint_vector = np.array([0, 0, 0])
+        
+        inputs_enum:enumerate = enumerate(inputs)
+        consecutive_endpoint_vector = np.array([0, 0, 0], dtype=np.float64)
         for idx, component in self.components.iterrows():
             match component["entity"].type:
                 case CT.LINK:
-                    consecutive_endpoint_vector = ThreeDimCalculation.extend(consecutive_endpoint_vector,
-                                                                             component["entity"].translation_direction,
-                                                                             component["entity"].translation_distance)
-                    endpoint_vector = component["entity"].translation_direction * component["entity"].translation_distance
+                    consecutive_endpoint_vector += component["entity"].endpoint_vector
+                    endpoint_vector = component["entity"].endpoint_vector
                     x = endpoint_vector[0]
                     y = endpoint_vector[1]
                     z = endpoint_vector[2]
@@ -117,66 +124,75 @@ class Configuration:
                         [0, 0, 0, 1]
                     ])
                 case CT.ROTATION_JOINT:
+                    _, rotation_rad = next(inputs_enum)
                     rotation_direction = component["entity"].axis_direction
                     lam = KinematicUtils.calculate_lam(consecutive_endpoint_vector,
                                                        rotation_direction)
                     self.components.at[idx, "compensate_transformation_matrix"] = np.array([
-                        [1, 0, 0, 0],
-                        [0, 1, 0, 0],
+                        [c(rotation_rad), -s(rotation_rad), 0, 0],
+                        [s(rotation_rad), c(rotation_rad), 0, 0],
                         [0, 0, 1, -lam],
                         [0, 0, 0, 1]
                     ])
                     consecutive_endpoint_vector = np.array([0, 0, -lam])
+                    
+    def enable_inverse_kinematic(self,
+                                 names: list) -> None:
+        """Specify reference systems or components to participate in inverse kinematics analysis. This function is recommended to be called after the entire robotic arm has been constructed (using Configuration.confirm_construct()).
     
-    def get_dh_table(self, 
-                      inputs:list) -> np.typing.NDArray:
+        Args:
+            name (np.typing.NDArray): The name of the reference system or component that needs to participate in the inverse kinematics analysis.
+    
+        Returns:
+            None.
+        """
+        
+        component_names = self.components["name"].tolist()
+        reference_frame_names = self.reference_frames["name"].tolist()
+        for name in names:
+            if name not in component_names and name not in reference_frame_names:
+                raise Exception(f"Fail to locate a joint or reference frame named {name}")
+            self.inverse_kinematics_enabled.append(name)
+    
+    def _get_dh_table(self, 
+                     inputs:list) -> list:
         """Generate standard D-H table from given inputs. It should be noted that the generated D-H table is the parameters of each reference frame rather than each joint.
     
         Args:
             inputs (list): Input sequence.
     
         Returns:
-            np.typing.NDArray: Standard D-H table
+            None.
         """
         
         if len(inputs) != self.rotation_joint_num + self.prismatic_joint_num:
             raise Exception("The number of input signals does not match the number of joints...")
+        self.calculate_compensation_transformation_matrix(inputs)
         inputs_enum:enumerate = enumerate(inputs)
         last_input:float = 0.0
         consecutive_endpoint_vector:np.typing.NDArray = np.array([0.0, 0.0, 0.0])
-        dh_table:np.typing.NDArray = np.array([[0.0, 0.0, 0.0, 0.0]])
-        
+
+        dh_table:list = [(0.0, 0.0, 0.0, 0.0)]
         for _, component in self.components.iterrows():
             match component["entity"].type:
                 case CT.LINK:
-                    consecutive_endpoint_vector = ThreeDimCalculation.extend(consecutive_endpoint_vector,
-                                                                             component["entity"].translation_direction,
-                                                                             component["entity"].translation_distance)
-                    # if idx == len(self.components) - 1:
-                    #     dh_parameters = (0, 
-                    #                      consecutive_endpoint_vector[2],
-                    #                      consecutive_endpoint_vector[0],
-                    #                      0)
-                    #     dh_parameters = np.array(dh_parameters)
-                    #     last_rotation_rad = last_input
-                    #     dh_parameters[0] += last_rotation_rad
-                    #     dh_table = np.vstack([dh_table, dh_parameters.reshape(1, 4)])
+                    consecutive_endpoint_vector = consecutive_endpoint_vector + component["entity"].endpoint_vector
+
                 case CT.ROTATION_JOINT:
-                    
                     rotation_direction:np.typing.NDArray = component["entity"].axis_direction
                     dh_parameters:tuple = KinematicUtils.calculate_dh_parameters(consecutive_endpoint_vector,
-                                                                           rotation_direction)
-                    dh_parameters:np.typing.NDArray = np.array(dh_parameters)
+                                                                                 rotation_direction)
                     last_rotation_rad:float = last_input
+                    dh_parameters = list(dh_parameters)
                     dh_parameters[0] += last_rotation_rad
-                    dh_table = np.vstack([dh_table, dh_parameters.reshape(1, 4)])
-                    
+                    dh_parameters = tuple(dh_parameters)
+                    dh_table.append(dh_parameters)
                     lam = KinematicUtils.calculate_lam(consecutive_endpoint_vector,
                                                        rotation_direction)
                     consecutive_endpoint_vector = np.array([0, 0, -lam])
                     _, rotation_rad = next(inputs_enum)
                     last_input = rotation_rad
-                                  
+                    
         return dh_table
     
     def get_po_matrixs(self,
@@ -189,10 +205,13 @@ class Configuration:
         Returns:
             dict: Position-orientation matrix of each joints from base to tip.
         """
-
-        dh_table:np.typing.NDArray = self.get_dh_table(inputs)
+        
+        if len(inputs) != self.rotation_joint_num + self.prismatic_joint_num:
+            raise Exception("The number of input signals does not match the number of joints...")
+        dh_table:list = self._get_dh_table(inputs)
+        names:list = self.reference_frames["name"].tolist()
         reference_frame_po_matrixs:dict = KinematicUtils.forward_kinematics(dh_table = dh_table,
-                                                                            names = self.reference_frames["name"].tolist())
+                                                                            names = names)
         reference_frame_po_matrixs_enum = enumerate(reference_frame_po_matrixs.items())
         po_matrixs = {}
         reference_frame_name:None | str = None
@@ -205,4 +224,3 @@ class Configuration:
             last_po_matrix = last_po_matrix @ transformation_matrix
             po_matrixs[component["name"]] = last_po_matrix
         return po_matrixs
-    
