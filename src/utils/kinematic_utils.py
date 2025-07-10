@@ -6,10 +6,10 @@ from utils.three_dim_calculation import ThreeDimCalculation
 
 class KinematicUtils:
 
-    def _dh_transform(theta, 
-                      d, 
-                      a, 
-                      alpha):
+    def get_dh_transformation_matrix(theta:float,
+                                     d:float,
+                                     a:float,
+                                     alpha:float) -> np.typing.NDArray:
         """Construct a transformation matrix that has undergone theta, d, a, and alpha transformations.
     
         Args:
@@ -19,7 +19,7 @@ class KinematicUtils:
             alpha (float):  Rotation angle around the x-axis
     
         Returns:
-            np.array(list): Transformation matrix for a single row in D-H table.
+            np.typing.NDArray: Transformation matrix for a single row in D-H table.
         """
         return np.array([
             [c(theta), -s(theta)*c(alpha), s(theta)*s(alpha), a*c(theta)],
@@ -28,22 +28,22 @@ class KinematicUtils:
             [0, 0, 0, 1]
         ], dtype = np.float64)
     
-    def forward_kinematics(dh_table, 
-                           names = None):
-        """Perform forward kinematic analysis.
+    def forward_kinematics(dh_table:np.typing.NDArray, 
+                           names: list | None = None) -> dict:
+        """Perform forward kinematic analysis to reference frames.
     
         Args:
-            dh_table (np.array(list)):  Target D-H table.
-            joint_no (int):            Target joint number.
+            dh_table (np.typing.NDArray):   Target D-H table.
+            names (list):                   Target joint number.
     
         Returns:
-            set(np.array(list)): Position-orientation matrix of joints from base to tip.
+            dict: Position-orientation matrix of reference frames from base to tip.
         """
         
         T = np.eye(4)
         po_matrixs = {}
         for idx, row in enumerate(dh_table):
-            Ti = KinematicUtils._dh_transform(*row)
+            Ti = KinematicUtils.get_dh_transformation_matrix(*row)
             T = T @ Ti
             if names is None: 
                 name = str(idx)
@@ -63,10 +63,10 @@ class KinematicUtils:
         """Construct a Jacobian matrix from D-H table.
     
         Args:
-            dh_table (np.array(list)):  Target D-H table.
+            dh_table (np.typing.NDArray):  Target D-H table.
     
         Returns:
-            np.array(list): Jacobian matrix.
+            np.typing.NDArray: Jacobian matrix.
         """
         
         joints_num = dh_table.shape[0]
@@ -96,11 +96,11 @@ class KinematicUtils:
         """Calculating position-orientation error in the numerical solution process of inverse kinematics.
     
         Args:
-            po_target (np.array(list)):     Target position-orientation matirx.
-            po_current (np.array(list)):    Current position-orientation merix.
+            po_target (np.typing.NDArray):     Target position-orientation matirx.
+            po_current (np.typing.NDArray):    Current position-orientation merix.
     
         Returns:
-            np.array(list): Column vector of axial position-orientation error.
+            np.typing.NDArray: Column vector of axial position-orientation error.
         """
         p_error = po_target[0:3,3] - po_current[0:3,3]
         r_matrix_target  = po_target[0:3, 0:3]
@@ -125,14 +125,14 @@ class KinematicUtils:
     
         Args:
             dh_table_config (function):     Config function of D-H table.
-            po_target (np.array(list)):     Target position-orientation matirx.
+            po_target (np.typing.NDArray):     Target position-orientation matirx.
             angles_init (list):             Initial angles of each joints
             max_iters (int):                Maximum number of iterations.
             shreshold (float):              Threshold of error vector norm.
             learning_rate (float):          Learning rate.
     
         Returns:
-            np.array(list): Column vector of axial position-orientation error.
+            np.typing.NDArray: Column vector of axial position-orientation error.
         """
         
         angles_current = np.array(angles_init, dtype=np.float64)
@@ -153,13 +153,13 @@ class KinematicUtils:
         
         raise RuntimeError("Inverse Kinematic Analysis Failed...")
     
-    def calculate_dh_parameters(endpoint_vector,
-                                rotation_direction):
+    def calculate_dh_parameters(endpoint_vector:np.typing.NDArray,
+                                rotation_direction:np.typing.NDArray) -> tuple:
         """Perform standard D-H analysis with a relative joint coordinate and rotation direction. Generate standard D-H parameters: theta, d, a, alpha. Please refer to the documentation in the docs folder in the project root directory for the formula derivation.
     
         Args:
-            endpoint_vector (np.array(list)):       A vector pointing from the previous joint to the current joint, i.e. the coordinates of current joint relative to the previous reference frame.
-            rotation_direction (np.array(list)):    Vector of joint rotation direction.
+            endpoint_vector (np.typing.NDArray):       A vector pointing from the previous joint to the current joint, i.e. the coordinates of current joint relative to the previous reference frame.
+            rotation_direction (np.typing.NDArray):    Vector of joint rotation direction.
     
         Returns:
             tuple: Standard D-H parameters: theta, d, a, alpha.
@@ -183,16 +183,16 @@ class KinematicUtils:
         alpha = ThreeDimCalculation.calculate_rotation_angle_rad(z, rotation_direction, oo)
         return theta, d, a, alpha
     
-    def calculate_lam(endpoint_vector,
-                      rotation_direction):
+    def calculate_lam(endpoint_vector:np.typing.NDArray,
+                      rotation_direction:np.typing.NDArray) -> float:
         """Calculate lam in the process of automatically confirming reference frame. lam is very important in the process of calibrating the current reference system position, and lam is needed to eliminate the influence of movement in the z-axis direction.
     
         Args:
-            endpoint_vector (np.array(list)):       A vector pointing from the previous joint to the current joint, i.e. the coordinates of current joint relative to the previous reference frame.
-            rotation_direction (np.array(list)):    Vector of joint rotation direction.
+            endpoint_vector (np.typing.NDArray):       A vector pointing from the previous joint to the current joint, i.e. the coordinates of current joint relative to the previous reference frame.
+            rotation_direction (np.typing.NDArray):    Vector of joint rotation direction.
     
         Returns:
-            tuple: Standard D-H parameters: theta, d, a, alpha.
+            float: The distance between the origin of the reference system on the next joint and the actual joint on the z-axis of that reference system (distinguishing between positive and negative).
         """
         x_p, y_p, z_p = endpoint_vector
         x_r, y_r, z_r = rotation_direction

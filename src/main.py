@@ -1,12 +1,13 @@
-from structure.assembly import Assembly
-from structure.components.link import Link
-from structure.components.rotation_joint import RotationJoint
+from model.configuration import Configuration
+from model.components.link import Link
+from model.components.rotation_joint import RotationJoint
 from kinematics.dh_tables import Config4V3
 from utils.kinematic_utils import KinematicUtils
+from math import pi
 
 import numpy as np
 
-left_arm = Assembly()
+left_arm = Configuration()
 left_arm.construct("link_0-0", 
                    Link(np.array([1, 0, 0]), 5.1))\
         .construct("link_0-1", 
@@ -28,28 +29,17 @@ left_arm.construct("link_0-0",
         .construct("la-j3", 
                    RotationJoint(np.array([0, 1, 0])))\
         .construct("link_3-0", 
-                   Link(np.array([1, 0, 0]), 250))
+                   Link(np.array([1, 0, 0]), 250))\
+        .confirm_construct()
 
-inputs = [0, 0, 0]
-po_matrixs = left_arm.get_po_matrixs(inputs)
-fullscale_po_matrix = left_arm.get_fullscale_po_matrixs(inputs)
-# origin_po_matrixs = KinematicUtils.forward_kinematics(Config4V3.left(inputs))
+inputs = [pi/2, 0, 0]
+new_po_matrixs = left_arm.get_po_matrixs(inputs)
+ori_po_matrixs = KinematicUtils.forward_kinematics(Config4V3.left(inputs))
 
-# print(f"{left_arm.get_dh_table(inputs)}")
-# print(f"================")
-# print(f"{left_arm.get_modified_dh_table(inputs)}")
-
-for key in po_matrixs.keys():
-    print(f"{key}:\n")
-    print(f"{po_matrixs[key]}")
-print(f"=======================================")
-for key in fullscale_po_matrix.keys():
-    print(f"{key}:\n")
-    print(f"{fullscale_po_matrix[key]}")
-# print(f"=======================================")
-# for key in origin_po_matrixs.keys():
-#     print(f"{key}:\n")
-#     print(f"{origin_po_matrixs[key]}")
-
-# print(f"{KinematicUtils.calculate_dh_parameters(np.array([0,-19.45,0]), np.array([0,0,1]))}")
-
+for name, po_matrix in new_po_matrixs.items():
+    print(f"{name}")
+    print(f"{po_matrix}\n")
+print(f"==========================")
+for name, po_matrix in ori_po_matrixs.items():
+    print(f"{name}")
+    print(f"{po_matrix}\n")
