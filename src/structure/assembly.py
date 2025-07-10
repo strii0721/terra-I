@@ -55,7 +55,6 @@ class Assembly:
         inputs_enum = enumerate(inputs)
         last_input = 0
         consecutive_endpoint_vector = np.array([0, 0, 0])
-        last_rotation_direction = np.array([0, 0, 1])
         dh_table = np.empty((0, 4))
         
         for idx, key in enumerate(self.components.keys()):
@@ -103,17 +102,22 @@ class Assembly:
         if len(inputs) != self.rotation_joint_num + self.prismatic_joint_num:
             raise Exception("The number of input signals does not match the number of joints...")
         inputs_enum = enumerate(inputs)
+        consecutive_endpoint_vector = np.array([0, 0, 0])
         modified_dh_table = np.empty((0, 4))
         
         for key in self.components.keys():
             match self.components[key].type:
                 case CT.LINK:
-                    endpoint_vector = ThreeDimCalculation.extend(np.array([0, 0, 0]),
+                    endpoint_vector = ThreeDimCalculation.extend(consecutive_endpoint_vector,
                                                                  self.components[key].translation_direction,
                                                                  self.components[key].translation_distance)
-                    rotation_direction = np.array([0, 0, 1])
-                    modified_dh_parameters = KinematicUtils.calculate_dh_parameters(endpoint_vector, 
-                                                                                    rotation_direction)
+                    # rotation_direction = np.array([0, 0, 1])
+                    # modified_dh_parameters = KinematicUtils.calculate_dh_parameters(endpoint_vector, 
+                    #                                                                 rotation_direction)
+                    modified_dh_parameters = (0,
+                                              endpoint_vector[2],
+                                              endpoint_vector[0],
+                                              0)
                     modified_dh_parameters = np.array(modified_dh_parameters)
                     modified_dh_table = np.vstack([modified_dh_table, modified_dh_parameters.reshape(1, 4)])
                 case CT.ROTATION_JOINT:

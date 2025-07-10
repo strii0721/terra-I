@@ -54,9 +54,8 @@ class ThreeDimCalculation:
             cross_product = np.cross(start_vector, end_vector)
             dot_product = np.dot(start_vector, end_vector)
             if np.linalg.norm(normal) < 1e-8:
-                sign = 1
-            else: 
-                normal = ThreeDimCalculation.convert_to_unit_vector(normal)
-                sign = np.sign(np.dot(cross_product, normal))
+                normal = np.array([1, 0, 0])
+            normal = ThreeDimCalculation.convert_to_unit_vector(normal)
+            sign = np.sign(np.dot(cross_product, normal))
             angle_rad = np.arctan2(np.linalg.norm(cross_product) * sign, dot_product)
             return angle_rad

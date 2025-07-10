@@ -185,6 +185,15 @@ class KinematicUtils:
     
     def calculate_lam(endpoint_vector,
                       rotation_direction):
+        """Calculate lam in the process of automatically confirming reference frame. lam is very important in the process of calibrating the current reference system position, and lam is needed to eliminate the influence of movement in the z-axis direction.
+    
+        Args:
+            endpoint_vector (np.array(list)):       A vector pointing from the previous joint to the current joint, i.e. the coordinates of current joint relative to the previous reference frame.
+            rotation_direction (np.array(list)):    Vector of joint rotation direction.
+    
+        Returns:
+            tuple: Standard D-H parameters: theta, d, a, alpha.
+        """
         x_p, y_p, z_p = endpoint_vector
         x_r, y_r, z_r = rotation_direction
         

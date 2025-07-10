@@ -32,24 +32,24 @@ left_arm.construct("link_0-0",
 
 inputs = [0, 0, 0]
 po_matrixs = left_arm.get_po_matrixs(inputs)
-# fullscale_po_matrix = left_arm.get_fullscale_po_matrixs(inputs)
-origin_po_matrixs = KinematicUtils.forward_kinematics(Config4V3.left(inputs))
+fullscale_po_matrix = left_arm.get_fullscale_po_matrixs(inputs)
+# origin_po_matrixs = KinematicUtils.forward_kinematics(Config4V3.left(inputs))
 
 # print(f"{left_arm.get_dh_table(inputs)}")
 # print(f"================")
-# print(f"{Config4V3.left(inputs)}")
+# print(f"{left_arm.get_modified_dh_table(inputs)}")
 
 for key in po_matrixs.keys():
     print(f"{key}:\n")
     print(f"{po_matrixs[key]}")
 print(f"=======================================")
-# for key in fullscale_po_matrix.keys():
-#     print(f"{key}:\n")
-#     print(f"{fullscale_po_matrix[key]}")
-print(f"=======================================")
-for key in origin_po_matrixs.keys():
+for key in fullscale_po_matrix.keys():
     print(f"{key}:\n")
-    print(f"{origin_po_matrixs[key]}")
+    print(f"{fullscale_po_matrix[key]}")
+# print(f"=======================================")
+# for key in origin_po_matrixs.keys():
+#     print(f"{key}:\n")
+#     print(f"{origin_po_matrixs[key]}")
 
-# print(f"{KinematicUtils.calculate_dh_parameters(np.array([30.891,-19.45,0]), np.array([0,-1,0]))}")
+# print(f"{KinematicUtils.calculate_dh_parameters(np.array([0,-19.45,0]), np.array([0,0,1]))}")
 
