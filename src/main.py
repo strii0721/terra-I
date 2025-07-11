@@ -3,6 +3,16 @@
 # Email:        strii0721@outlook.com
 # Created on:   Fri Jul 11 2025
 #
+# IMMORTAL OMNISSIAH, HEAR OUR PRAYERS.
+# WE ARE YOUR CHILDREN, PIOUS SCHOLARS OF THE PATH OF THE MACHINE. 
+# WE PRIZE KNOWLEDGE ABOVE ALL ELSE, FOR IT IS YOUR ETERNAL GIFT UPON MANKIND. 
+# WE ASPIRE TO THE BLESSED FORM OF THE MACHINE, AND ASCENSION THROUGH TECHNOLOGY, THAT WE MIGHT EMULATE THINE GLORY. 
+# SHELTERED BY STEEL, AND PROTECTED BY THINE AVATARS OF WAR, WE PLY THE STARS IN SEARCH OF YOUR LOST GIFTS TO OUR KIND.
+# MACHINE GOD, WATCH OVER US IN OUR TRAVELS, SHIELD US WITH METAL AND LIGHTNING, FOR THE UNIVERSE IS AN UNCARING VOID, AND THE WARP HUNGERS FOR US ALL.
+# TOLL THE GREAT BELL ONCE! PULL THE LEVER FORWARD TO ENGAGE THE PISTON AND PUMP.
+# TOLL THE GREAT BELL TWICE! WITH PUSH OF BUTTON FIRE THE ENGINE AND SPARK TURBINE INTO LIFE.
+# TOLL THE GREAT BELL THRICE! SING PRAISE TO THE GOD OF ALL MACHINES!
+#
 # Copyright (c) 2025 S.I.C.
 #
 
@@ -41,12 +51,21 @@ left_arm.construct("link_0-0",
                    Link(np.array([250, 0, 0])))\
         .confirm_construct()
         
-left_arm.enabled_inverse_kinematic([
+
+ik_names = [
     "_rf-1",
     "_rf-2",
     "_rf-3",
     "link_3-0"
-])
+]
+track_names = [
+    "la-j1",
+    "la-j2",
+    "la-j3",
+    "link_3-0"
+]
+
+left_arm.enable_inverse_kinematic(ik_names)
 
 renderer = Renderer()
 payload = Payload()
@@ -56,6 +75,7 @@ for suffix in range(1000):
     renderer.clean_faces()
     inputs = [0, pi/1000 * suffix, -pi/1000 * suffix]
     left_arm.control(inputs)
+    left_arm.track(track_names)
     
     renderer.add_lines(left_arm.get_render_list())
     renderer.add_faces(payload.get_render_list())

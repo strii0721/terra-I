@@ -3,6 +3,16 @@
 # Email:        strii0721@outlook.com
 # Created on:   Thu Jul 10 2025
 #
+# IMMORTAL OMNISSIAH, HEAR OUR PRAYERS.
+# WE ARE YOUR CHILDREN, PIOUS SCHOLARS OF THE PATH OF THE MACHINE. 
+# WE PRIZE KNOWLEDGE ABOVE ALL ELSE, FOR IT IS YOUR ETERNAL GIFT UPON MANKIND. 
+# WE ASPIRE TO THE BLESSED FORM OF THE MACHINE, AND ASCENSION THROUGH TECHNOLOGY, THAT WE MIGHT EMULATE THINE GLORY. 
+# SHELTERED BY STEEL, AND PROTECTED BY THINE AVATARS OF WAR, WE PLY THE STARS IN SEARCH OF YOUR LOST GIFTS TO OUR KIND.
+# MACHINE GOD, WATCH OVER US IN OUR TRAVELS, SHIELD US WITH METAL AND LIGHTNING, FOR THE UNIVERSE IS AN UNCARING VOID, AND THE WARP HUNGERS FOR US ALL.
+# TOLL THE GREAT BELL ONCE! PULL THE LEVER FORWARD TO ENGAGE THE PISTON AND PUMP.
+# TOLL THE GREAT BELL TWICE! WITH PUSH OF BUTTON FIRE THE ENGINE AND SPARK TURBINE INTO LIFE.
+# TOLL THE GREAT BELL THRICE! SING PRAISE TO THE GOD OF ALL MACHINES!
+#
 # Copyright (c) 2025 S.I.C.
 #
 
@@ -11,18 +21,23 @@ from utils.kinematic_utils import KinematicUtils
 from numpy import sin as s, cos as c
 from model.components.compunent_types import ComponentTypes as CT
 import pandas as pd
+from dk.logger.log4p import Log4P
+from model.components.reference_frame import ReferenceFrame
 
 
 class RoboticArm:
     
     def __init__(self):
+        
+        self.logger = Log4P()
+        
         self.link_num:int = 0
         self.rotation_joint_num:int = 0
         self.prismatic_joint_num:int = 0
         self.components:pd.DataFrame = pd.DataFrame(columns = [
             "name",
             "entity",
-            "bound_reference_frames",
+            "bound_reference_frame",
             "compensate_transformation_matrix",
             "po_matrix"
         ])
@@ -30,7 +45,7 @@ class RoboticArm:
         self.components["po_matrix"] = self.components["po_matrix"].astype(object)
         self.reference_frames:pd.DataFrame = pd.DataFrame(columns = [
             "name",
-            "dh_parameters",
+            "entity",
             "po_matrix"
         ])
         self.reference_frames["po_matrix"] = self.reference_frames["po_matrix"].astype(object)
@@ -87,8 +102,9 @@ class RoboticArm:
         """
         reference_frame_idx:int = 0
         reference_frame_name:str = f"_rf-{reference_frame_idx}"
+        reference_frame = ReferenceFrame(reference_frame_name)
         new_row = pd.DataFrame([
-            {"name": reference_frame_name}
+            {"name": reference_frame_name, "entity": reference_frame},
             ])
         self.reference_frames = pd.concat([self.reference_frames, new_row], ignore_index = True)
         # self.reference_frames[reference_frame_name] = "_base"
@@ -96,11 +112,11 @@ class RoboticArm:
         for idx, component in self.components.iterrows():
             match component["entity"].type:
                 case CT.LINK:
-                    self.components.at[idx, "bound_reference_frames"] = reference_frame_name
+                    self.components.at[idx, "bound_reference_frame"] = reference_frame_name
                 case CT.ROTATION_JOINT:
                     reference_frame_idx += 1
                     reference_frame_name = f"_rf-{reference_frame_idx}"
-                    self.components.at[idx, "bound_reference_frames"] = reference_frame_name
+                    self.components.at[idx, "bound_reference_frame"] = reference_frame_name
                     new_row = pd.DataFrame([
                         {"name": reference_frame_name}
                         ])
@@ -146,7 +162,7 @@ class RoboticArm:
                     ])
                     consecutive_endpoint_vector = np.array([0, 0, -lam])
                     
-    def enabled_inverse_kinematic(self,
+    def enable_inverse_kinematic(self,
                                  names: list) -> None:
         """Specify reference systems or components to participate in inverse kinematics analysis. This function is recommended to be called after the entire robotic arm has been constructed (using Configuration.confirm_construct()).
     
@@ -164,8 +180,8 @@ class RoboticArm:
                 raise Exception(f"Fail to locate a joint or reference frame named {name}")
             self.inverse_kinematics_enabled.append(name)
     
-    def _get_dh_table(self, 
-                     inputs:list) -> list:
+    def calculate_dh_table(self,
+                           inputs:list) -> list:
         """Generate standard D-H table from given inputs. It should be noted that the generated D-H table is the parameters of each reference frame rather than each joint.
     
         Args:
@@ -205,8 +221,8 @@ class RoboticArm:
                     
         return dh_table
     
-    def get_po_matrixs(self,
-                       inputs:list) -> dict:
+    def calculate_po_matrixs(self,
+                             inputs:list) -> dict:
         """Perform forward kinematic analysis and return position-orientation matrixs of each joints and reference frame.
     
         Args:
@@ -218,7 +234,7 @@ class RoboticArm:
         
         if len(inputs) != self.rotation_joint_num + self.prismatic_joint_num:
             raise Exception("The number of input signals does not match the number of joints...")
-        dh_table:list = self._get_dh_table(inputs)
+        dh_table:list = self.calculate_dh_table(inputs)
         names:list = self.reference_frames["name"].tolist()
         reference_frame_po_matrixs:dict = KinematicUtils.forward_kinematics(dh_table = dh_table,
                                                                             names = names)
@@ -227,7 +243,7 @@ class RoboticArm:
         reference_frame_name:None | str = None
         for _, component in self.components.iterrows():
         # for key, component in self.components.items():
-            if component["bound_reference_frames"] != reference_frame_name or reference_frame_name is None:
+            if component["bound_reference_frame"] != reference_frame_name or reference_frame_name is None:
                 _, (reference_frame_name, last_po_matrix) = next(reference_frame_po_matrixs_enum)
                 po_matrixs[reference_frame_name] = last_po_matrix
             transformation_matrix = component["compensate_transformation_matrix"]
@@ -246,7 +262,7 @@ class RoboticArm:
             dict: Position-orientation matrix of joints and reference frames that enabled inverse kinematic analysis.
         """
         
-        po_matrixs_dict:dict = self.get_po_matrixs(inputs)
+        po_matrixs_dict:dict = self.calculate_po_matrixs(inputs)
         ik_po_matrics = {}
         for name, po_matrix in po_matrixs_dict.items():
             if name in self.inverse_kinematics_enabled:
@@ -321,7 +337,7 @@ class RoboticArm:
         Returns:
             None.
         """
-        po_matrixs = self.get_po_matrixs(inputs)
+        po_matrixs = self.calculate_po_matrixs(inputs)
         component_names = self.components["name"].tolist()
         reference_frame_names = self.reference_frames["name"].tolist()
         for name, po_matrix in po_matrixs.items():
@@ -348,7 +364,7 @@ class RoboticArm:
         
         render_list = []
         start_point = (0, 0, 0)
-        for idx, component in self.components.iterrows():
+        for _, component in self.components.iterrows():
             x_end_point = component["po_matrix"][0,3]
             y_end_point = component["po_matrix"][1,3]
             z_end_point = component["po_matrix"][2,3]
@@ -357,3 +373,51 @@ class RoboticArm:
                 render_list.append([start_point, end_point])
             start_point = end_point
         return render_list
+    
+    def track(self,
+              track_object_names:list) -> None:
+        """Track the position-orientation information of a given object and print it in the terminal.
+    
+        Args:
+            track_objects (list): Name list of objects that need to track.
+    
+        Returns:
+            None.
+        """
+        
+        objects = {
+            name: (entity, po_matrix)
+            for name, entity, po_matrix in zip(
+                self.components["name"],
+                self.components["entity"],
+                self.components["po_matrix"])
+        }
+        
+        objects = objects | {
+            name: (entity, po_matrix)
+            for name, entity, po_matrix in zip(
+                self.reference_frames["name"],
+                self.reference_frames["entity"],
+                self.reference_frames["po_matrix"])
+        }
+
+        for name in track_object_names:
+            entity = objects[name][0]
+            po_matix = objects[name][1]
+            x, y, z = KinematicUtils.calculate_position_from_po_matrix(po_matix)
+            x_vector, y_vector, z_vector = KinematicUtils.calculate_orientation_from_po_matrix(po_matix)
+            self.logger.info(f"Name: {name}")
+            self.logger.info(f"Position: x = {x}    y = {y}    z = {z}")
+            self.logger.info(f"Orientation:")
+            self.logger.info(f" - X-Axis: {x_vector}")
+            self.logger.info(f" - Y-Axis: {y_vector}")
+            self.logger.info(f" - Z-Axis: {z_vector}")
+            match entity.type:
+                case CT.LINK:
+                    pass
+                case CT.ROTATION_JOINT:
+                    self.logger.info(f"Current Output: {entity.angle}")
+                case _:
+                    pass
+            self.logger.info(f"------------------------------------------------")
+        self.logger.info(f"================================================")

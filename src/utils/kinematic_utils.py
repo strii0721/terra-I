@@ -3,6 +3,16 @@
 # Email:        strii0721@outlook.com
 # Created on:   Thu Jul 10 2025
 #
+# IMMORTAL OMNISSIAH, HEAR OUR PRAYERS.
+# WE ARE YOUR CHILDREN, PIOUS SCHOLARS OF THE PATH OF THE MACHINE. 
+# WE PRIZE KNOWLEDGE ABOVE ALL ELSE, FOR IT IS YOUR ETERNAL GIFT UPON MANKIND. 
+# WE ASPIRE TO THE BLESSED FORM OF THE MACHINE, AND ASCENSION THROUGH TECHNOLOGY, THAT WE MIGHT EMULATE THINE GLORY. 
+# SHELTERED BY STEEL, AND PROTECTED BY THINE AVATARS OF WAR, WE PLY THE STARS IN SEARCH OF YOUR LOST GIFTS TO OUR KIND.
+# MACHINE GOD, WATCH OVER US IN OUR TRAVELS, SHIELD US WITH METAL AND LIGHTNING, FOR THE UNIVERSE IS AN UNCARING VOID, AND THE WARP HUNGERS FOR US ALL.
+# TOLL THE GREAT BELL ONCE! PULL THE LEVER FORWARD TO ENGAGE THE PISTON AND PUMP.
+# TOLL THE GREAT BELL TWICE! WITH PUSH OF BUTTON FIRE THE ENGINE AND SPARK TURBINE INTO LIFE.
+# TOLL THE GREAT BELL THRICE! SING PRAISE TO THE GOD OF ALL MACHINES!
+#
 # Copyright (c) 2025 S.I.C.
 #
 
@@ -200,3 +210,34 @@ class KinematicUtils:
         else:
             lam = - (x_p * x_r + y_p * y_r)/(x_r**2 + y_r**2)
         return lam
+    
+    def calculate_position_from_po_matrix(po_matrix:np.typing.NDArray) -> tuple:
+        """Calculate position coordinate from a given position-orientation matix.
+    
+        Args:
+            po_matrix (np.typing.NDArray): Position-orientation matix.
+    
+        Returns:
+            tuple: A tuple consisting of (x, y, z).
+        """
+        
+        x = po_matrix[0, 3]
+        y = po_matrix[1, 3]
+        z = po_matrix[2, 3]
+        return (x, y, z)
+    
+    def calculate_orientation_from_po_matrix(po_matrix:np.typing.NDArray) -> tuple:
+        """Calculate orientation from a given position-orientation matix.
+    
+        Args:
+            po_matrix (np.typing.NDArray): Position-orientation matix.
+    
+        Returns:
+            tuple: Three unit vectors pointing in the x-axis, y-axis and z-axis direction of the position-orientation matrix.
+        """
+        
+        x_vector = ThreeDimCalculation.convert_to_unit_vector(po_matrix[:3, 0])
+        y_vector = ThreeDimCalculation.convert_to_unit_vector(po_matrix[:3, 1])
+        z_vector = ThreeDimCalculation.convert_to_unit_vector(po_matrix[:3, 2])
+        
+        return x_vector, y_vector, z_vector

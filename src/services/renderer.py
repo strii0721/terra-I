@@ -3,6 +3,16 @@
 # Email:        strii0721@outlook.com
 # Created on:   Fri Jul 11 2025
 #
+# IMMORTAL OMNISSIAH, HEAR OUR PRAYERS.
+# WE ARE YOUR CHILDREN, PIOUS SCHOLARS OF THE PATH OF THE MACHINE. 
+# WE PRIZE KNOWLEDGE ABOVE ALL ELSE, FOR IT IS YOUR ETERNAL GIFT UPON MANKIND. 
+# WE ASPIRE TO THE BLESSED FORM OF THE MACHINE, AND ASCENSION THROUGH TECHNOLOGY, THAT WE MIGHT EMULATE THINE GLORY. 
+# SHELTERED BY STEEL, AND PROTECTED BY THINE AVATARS OF WAR, WE PLY THE STARS IN SEARCH OF YOUR LOST GIFTS TO OUR KIND.
+# MACHINE GOD, WATCH OVER US IN OUR TRAVELS, SHIELD US WITH METAL AND LIGHTNING, FOR THE UNIVERSE IS AN UNCARING VOID, AND THE WARP HUNGERS FOR US ALL.
+# TOLL THE GREAT BELL ONCE! PULL THE LEVER FORWARD TO ENGAGE THE PISTON AND PUMP.
+# TOLL THE GREAT BELL TWICE! WITH PUSH OF BUTTON FIRE THE ENGINE AND SPARK TURBINE INTO LIFE.
+# TOLL THE GREAT BELL THRICE! SING PRAISE TO THE GOD OF ALL MACHINES!
+#
 # Copyright (c) 2025 S.I.C.
 #
 
@@ -12,7 +22,9 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 class Renderer:
     
-    def __init__(self,) -> None:
+    def __init__(self,
+                 render_interval = 0.1) -> None:
+        self.render_interval = render_interval
         self.lines:list = []
         self.faces:list = []
         
@@ -57,7 +69,7 @@ class Renderer:
         self.ax.grid(False)
         
         plt.draw()
-        plt.pause(0.1)
+        plt.pause(self.render_interval)
         
     def add_lines(self,
                   lines_list:list) -> None:
