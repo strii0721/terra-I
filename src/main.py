@@ -1,6 +1,13 @@
+#
+# Author:       strii0721
+# Email:        strii0721@outlook.com
+# Created on:   Fri Jul 11 2025
+#
+# Copyright (c) 2025 S.I.C.
+#
 
 
-from model.configuration import Configuration
+from model.robotic_arm import RoboticArm
 from model.components.link import Link
 from model.components.rotation_joint import RotationJoint
 from kinematics.dh_tables import Config4V3
@@ -9,7 +16,7 @@ from math import pi
 
 import numpy as np
 
-left_arm = Configuration()
+left_arm = RoboticArm()
 left_arm.construct("link_0-0", 
                    Link(np.array([5.1, 0, 0])))\
         .construct("link_0-1", 
@@ -33,12 +40,19 @@ left_arm.construct("link_0-0",
         .construct("link_3-0", 
                    Link(np.array([250, 0, 0])))\
         .confirm_construct()
+        
 left_arm.enabled_inverse_kinematic([
     "_rf-1",
     "_rf-2",
     "_rf-3",
     "link_3-0"
 ])
+
+# print(left_arm.get_joint_outputs())
+
+# left_arm.control([-1.967235492231584e-09, -6.283185304944256, -4.7123889778553805])
+
+# print(left_arm.get_joint_outputs())
 
 inputs = [0, 0, -3*pi/2]
 # new_po_matrixs = left_arm.get_po_matrixs(inputs)

@@ -13,7 +13,7 @@ from model.components.compunent_types import ComponentTypes as CT
 import pandas as pd
 
 
-class Configuration:
+class RoboticArm:
     
     def __init__(self):
         self.link_num:int = 0
@@ -74,6 +74,8 @@ class Configuration:
             None.
         """
         self.bind_reference_frame()
+        init_inputs = self.get_joint_outputs()
+        self.control(init_inputs)        
         
     def bind_reference_frame(self) -> None:
         """Automatically create coordinate systems that comply with standard D-H analysis based on configuration and bind them.
@@ -231,7 +233,7 @@ class Configuration:
             transformation_matrix = component["compensate_transformation_matrix"]
             last_po_matrix = last_po_matrix @ transformation_matrix
             po_matrixs[component["name"]] = last_po_matrix
-        return po_matrixs
+        return po_matrixs   
     
     def get_ik_po_matrixs(self, 
                           inputs:list) -> dict:
@@ -267,5 +269,63 @@ class Configuration:
         
         target_joint_inputs = KinematicUtils.inverse_kinematics(po_matrixs_getter = self.get_ik_po_matrixs,
                                                                 target_po_matrix = target_po_matrix,
-                                                                current_joint_inputs = current_joint_inputs)
+                                                                current_joint_outputs = current_joint_inputs)
         return target_joint_inputs
+    
+    def get_joint_outputs(self) -> list:
+        """Get current outputs of all joints
+    
+        Args:
+    
+        Returns:
+            list: Current outputs of all joints (from base to tip)
+        """
+        joint_outputs = []
+        for _, component in self.components.iterrows():
+            match component["entity"].type:
+                case CT.ROTATION_JOINT:
+                    joint_outputs.append(component["entity"].angle)
+                case CT.PRISMATIC_JOINT:
+                    pass
+                case _:
+                    pass
+        return joint_outputs
+    
+    def set_joint_inputs(self,
+                         inputs:list) -> None:
+        """Set the inputs for all joints.
+    
+        Args:
+            inputs (list): Input sequence.
+    
+        Returns:
+            None.
+        """
+        inputs_enum = enumerate(inputs)
+        for idx, component in self.components.iterrows():
+            match component["entity"].type:
+                case CT.ROTATION_JOINT:
+                    _, input = next(inputs_enum)
+                    self.components.at[idx, "entity"].angle = input
+                case CT.PRISMATIC_JOINT:
+                    pass
+                case _:
+                    pass
+        
+    def control(self,
+                inputs:list) -> None:
+        po_matrixs = self.get_po_matrixs(inputs)
+        component_names = self.components["name"].tolist()
+        reference_frame_names = self.reference_frames["name"].tolist()
+        for name, po_matrix in po_matrixs.items():
+            if name in component_names:
+                mask = self.components["name"] == name
+                if mask.sum() == 1:
+                    idx = self.components[mask].index[0]
+                    self.components.at[idx, "po_matrix"] = po_matrix
+            if name in reference_frame_names:
+                mask = self.reference_frames["name"] == name
+                if mask.sum() == 1:
+                    idx = self.reference_frames[mask].index[0]
+                    self.reference_frames.at[idx, "po_matrix"] = po_matrix
+        self.set_joint_inputs(inputs)

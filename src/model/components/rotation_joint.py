@@ -14,8 +14,10 @@ class RotationJoint:
     
     def __init__(self, 
                  axis_direction,
+                 init_angle = 0.0,
                  visibility = True
                  ):
         self.type:CT = CT.ROTATION_JOINT
         self.axis_direction:np.typing.NDArray = np.asarray(ThreeDimCalculation.convert_to_unit_vector(np.array(axis_direction)), dtype = np.float64)
+        self.angle = init_angle
         self.visibility:bool = visibility

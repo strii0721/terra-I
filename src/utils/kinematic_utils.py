@@ -69,7 +69,8 @@ class KinematicUtils:
         """Construct a Jacobian matrix from D-H table.
     
         Args:
-            dh_table (np.typing.NDArray):  Target D-H table.
+            po_matrixs_getter (function):   A function for obtaining the pose matrices of all coordinate systems and joints involved in the calculation.
+            joint_inputs (list):            Current joint inputs. Used to approximate accurate values
     
         Returns:
             np.typing.NDArray: Jacobian matrix.
@@ -96,8 +97,8 @@ class KinematicUtils:
         """Calculating position-orientation error in the numerical solution process of inverse kinematics.
     
         Args:
-            po_target (np.typing.NDArray):     Target position-orientation matirx.
-            po_current (np.typing.NDArray):    Current position-orientation merix.
+            target_po_matrix (np.typing.NDArray):     Target position-orientation matirx.
+            current_po_matrix (np.typing.NDArray):    Current position-orientation merix.
     
         Returns:
             np.typing.NDArray: Column vector of axial position-orientation error.
@@ -117,36 +118,36 @@ class KinematicUtils:
     
     def inverse_kinematics(po_matrixs_getter, 
                            target_po_matrix:np.typing.NDArray, 
-                           current_joint_inputs:list, 
+                           current_joint_outputs:list, 
                            max_iteration:int = 10000, 
                            shreshold:float = 1e-3, 
-                           learning_rate:float = 0.1):
+                           learning_rate:float = 1):
         """Perform forward kinematic analysis.
     
         Args:
-            po_matrixs_getter (function):   Config function of D-H table.
-            po_target (np.typing.NDArray):  Target position-orientation matirx.
-            angles_current (list):          Initial angles of each joints
-            max_iters (int):                Maximum number of iterations.
-            shreshold (float):              Threshold of error vector norm.
-            learning_rate (float):          Learning rate.
+            po_matrixs_getter (function):           A function for obtaining the pose matrices of all coordinate systems and joints involved in the calculation.
+            target_po_matrix (np.typing.NDArray):   Target position-orientation matirx.
+            current_joint_outputs (list):           Curent outputs of each joint
+            max_iteration (int):                    Maximum number of iterations.
+            shreshold (float):                      Threshold of error vector norm.
+            learning_rate (float):                  Learning rate.
     
         Returns:
-            np.typing.NDArray: Column vector of axial position-orientation error.
+            list: An input sequence that can let end of robotic arm reach a given position and orientation.
         """
         
         for i in range(max_iteration):
-            po_matrixs_dict = po_matrixs_getter(current_joint_inputs)
+            po_matrixs_dict = po_matrixs_getter(current_joint_outputs)
             current_po_matrix = list(po_matrixs_dict.values())[-1]
             po_error = KinematicUtils._calculate_error(target_po_matrix, current_po_matrix)
-            print(f"[{i}] error norm = {np.linalg.norm(po_error):.6f}, current_joint_inputs = {current_joint_inputs}")
+            print(f"[{i}] error norm = {np.linalg.norm(po_error):.6f}, current_joint_inputs = {current_joint_outputs}")
             if np.linalg.norm(po_error) < shreshold:
-                return current_joint_inputs
+                return current_joint_outputs
             J = KinematicUtils.jacobian(po_matrixs_getter = po_matrixs_getter,
-                                        joint_inputs = current_joint_inputs)
+                                        joint_inputs = current_joint_outputs)
             delta_inputs = learning_rate * np.linalg.pinv(J) @ po_error
-            current_joint_inputs = np.array(current_joint_inputs) + delta_inputs
-            current_joint_inputs = current_joint_inputs.tolist()
+            current_joint_outputs = np.array(current_joint_outputs) + delta_inputs
+            current_joint_outputs = current_joint_outputs.tolist()
         
         raise RuntimeError("Inverse Kinematic Analysis Failed...")
     
