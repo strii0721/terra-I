@@ -68,5 +68,4 @@ inputs = [0, 0, -3*pi/2]
 
 # Test for inverse kinematics
 target_po_matrix = list(left_arm.get_po_matrixs(inputs).values())[-1]
-target_joint_iniputs = left_arm.apply_inverse_kinematic_analysis(target_po_matrix = target_po_matrix,
-                                                                 current_joint_inputs = [0, 0, -pi])
+target_joint_iniputs = left_arm.apply_inverse_kinematic_analysis(target_po_matrix = target_po_matrix)

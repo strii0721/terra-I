@@ -255,18 +255,17 @@ class RoboticArm:
         return ik_po_matrics
     
     def apply_inverse_kinematic_analysis(self,
-                                         target_po_matrix:np.typing.NDArray,
-                                         current_joint_inputs:list) -> list:
+                                         target_po_matrix:np.typing.NDArray) -> list:
         """Apply inverse kinematic analysis on joints and reference frames that enabled inverse kinematic analysis.
     
         Args:
             target_po_matrix (np.typing.NDArray):   Target given position-orientation.
-            current_joint_inputs (list):            Current joint inputs.
     
         Returns:
             list: Target joint inputs that make end of the configuration reach a given position-orientation.
         """
         
+        current_joint_inputs = self.get_joint_outputs()
         target_joint_inputs = KinematicUtils.inverse_kinematics(po_matrixs_getter = self.get_ik_po_matrixs,
                                                                 target_po_matrix = target_po_matrix,
                                                                 current_joint_outputs = current_joint_inputs)
