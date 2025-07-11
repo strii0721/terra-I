@@ -1,3 +1,5 @@
+
+
 from model.configuration import Configuration
 from model.components.link import Link
 from model.components.rotation_joint import RotationJoint
@@ -31,20 +33,26 @@ left_arm.construct("link_0-0",
         .construct("link_3-0", 
                    Link(np.array([250, 0, 0])))\
         .confirm_construct()
-left_arm.enable_inverse_kinematic([
-    "la-j2",
-    "la-j3",
+left_arm.enabled_inverse_kinematic([
+    "_rf-1",
+    "_rf-2",
+    "_rf-3",
     "link_3-0"
 ])
 
-inputs = [0, 0, -pi/6]
-new_po_matrixs = left_arm.get_po_matrixs(inputs)
-ori_po_matrixs = KinematicUtils.forward_kinematics(Config4V3.left(inputs))
+inputs = [0, 0, -3*pi/2]
+# new_po_matrixs = left_arm.get_po_matrixs(inputs)
+# ori_po_matrixs = KinematicUtils.forward_kinematics(Config4V3.left(inputs))
 
-for name, po_matrix in new_po_matrixs.items():
-    print(f"{name}")
-    print(f"{po_matrix}\n")
-print(f"==========================")
-for name, po_matrix in ori_po_matrixs.items():
-    print(f"{name}")
-    print(f"{po_matrix}\n")
+# for name, po_matrix in new_po_matrixs.items():
+#     print(f"{name}")
+#     print(f"{po_matrix}\n")
+# print(f"==========================")
+# for name, po_matrix in ori_po_matrixs.items():
+#     print(f"{name}")
+#     print(f"{po_matrix}\n")
+
+# Test for inverse kinematics
+target_po_matrix = list(left_arm.get_po_matrixs(inputs).values())[-1]
+target_joint_iniputs = left_arm.apply_inverse_kinematic_analysis(target_po_matrix = target_po_matrix,
+                                                                 current_joint_inputs = [0, 0, -pi])

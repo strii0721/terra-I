@@ -1,7 +1,16 @@
+#
+# Author:       strii0721
+# Email:        strii0721@outlook.com
+# Created on:   Thu Jul 10 2025
+#
+# Copyright (c) 2025 S.I.C.
+#
+
 import numpy as np
 from numpy import sin as s, cos as c
 from math import sqrt
 import scipy
+from scipy.spatial.transform import Rotation as R
 from utils.three_dim_calculation import ThreeDimCalculation
 
 class KinematicUtils:
@@ -55,11 +64,8 @@ class KinematicUtils:
             po_matrixs[name] = T
         return po_matrixs
     
-    # def damped_pinv(J, damping=0.01):
-    #     JT = J.T
-    #     return JT @ np.linalg.inv(J @ JT + (damping ** 2) * np.eye(J.shape[0]))
-    
-    def jacobian(dh_table):
+    def jacobian(po_matrixs_getter,
+                 joint_inputs:list) -> np.typing.NDArray:
         """Construct a Jacobian matrix from D-H table.
     
         Args:
@@ -69,30 +75,24 @@ class KinematicUtils:
             np.typing.NDArray: Jacobian matrix.
         """
         
-        joints_num = dh_table.shape[0]
-        Ts = [np.eye(4)]
-        # for row in dh_table:
-        #     Ti= _dh_transform(*row)
-        #     Ts.append(Ts[-1] @ Ti)
-        for idx in range(joints_num):
-            Ts.append(KinematicUtils.forward_kinematics(dh_table = dh_table, 
-                                                        joint_no = idx + 1))
+        po_matrixs_dict = po_matrixs_getter(joint_inputs)
+        po_matrixs = list(po_matrixs_dict.values())
         zs = []
         ps = []
-        for T in Ts:
-            zs.append(T[0:3, 2])
-            ps.append(T[0:3, 3])
+        for po_matrix in po_matrixs:
+            zs.append(po_matrix[0:3, 2])
+            ps.append(po_matrix[0:3, 3])
         p_end = ps[-1]
         Jv = []
         Jw = []
-        for i in range(1, joints_num):
+        for i in range(len(po_matrixs)-1):
             Jv.append(np.cross(zs[i], p_end - ps[i]))
             Jw.append(zs[i])
         J = np.vstack([np.array(Jv).T, np.array(Jw).T])
         return J
     
-    def _calculate_error(po_target,
-                         po_current):
+    def _calculate_error(target_po_matrix,
+                         current_po_matrix):
         """Calculating position-orientation error in the numerical solution process of inverse kinematics.
     
         Args:
@@ -102,9 +102,10 @@ class KinematicUtils:
         Returns:
             np.typing.NDArray: Column vector of axial position-orientation error.
         """
-        p_error = po_target[0:3,3] - po_current[0:3,3]
-        r_matrix_target  = po_target[0:3, 0:3]
-        r_matrix_current = po_current[0:3, 0:3]
+        
+        p_error = target_po_matrix[0:3,3] - current_po_matrix[0:3,3]
+        r_matrix_target  = target_po_matrix[0:3, 0:3]
+        r_matrix_current = current_po_matrix[0:3, 0:3]
         r_matrix_error   = r_matrix_target @ r_matrix_current.T
         log_R = scipy.linalg.logm(r_matrix_error)
         o_error = np.array([
@@ -112,21 +113,20 @@ class KinematicUtils:
             log_R[0,2],
             log_R[1,0]
         ])
-        # return np.vstack((p_error, o_error))
         return np.append(p_error, o_error)
     
-    def inverse_kinematics(dh_table_config, 
-                           po_target, 
-                           angles_init, 
-                           max_iteration = 10000, 
-                           shreshold = 1e-3, 
-                           learning_rate = 0.01):
+    def inverse_kinematics(po_matrixs_getter, 
+                           target_po_matrix:np.typing.NDArray, 
+                           current_joint_inputs:list, 
+                           max_iteration:int = 10000, 
+                           shreshold:float = 1e-3, 
+                           learning_rate:float = 0.1):
         """Perform forward kinematic analysis.
     
         Args:
-            dh_table_config (function):     Config function of D-H table.
+            po_matrixs_getter (function):   Config function of D-H table.
             po_target (np.typing.NDArray):  Target position-orientation matirx.
-            angles_init (list):             Initial angles of each joints
+            angles_current (list):          Initial angles of each joints
             max_iters (int):                Maximum number of iterations.
             shreshold (float):              Threshold of error vector norm.
             learning_rate (float):          Learning rate.
@@ -135,21 +135,18 @@ class KinematicUtils:
             np.typing.NDArray: Column vector of axial position-orientation error.
         """
         
-        angles_current = np.array(angles_init, dtype=np.float64)
         for i in range(max_iteration):
-            dh_table = dh_table_config(angles_current)
-            po_current = KinematicUtils.forward_kinematics(dh_table)
-            po_error = KinematicUtils._calculate_error(po_target, po_current)
-            # p_error, o_error = cal_error(po_target, po_current)
-            # po_error = np.vstack((p_error, o_error))
-            print(f"[{i}] error norm = {np.linalg.norm(po_error):.6f}, angle = {angles_current}")
+            po_matrixs_dict = po_matrixs_getter(current_joint_inputs)
+            current_po_matrix = list(po_matrixs_dict.values())[-1]
+            po_error = KinematicUtils._calculate_error(target_po_matrix, current_po_matrix)
+            print(f"[{i}] error norm = {np.linalg.norm(po_error):.6f}, current_joint_inputs = {current_joint_inputs}")
             if np.linalg.norm(po_error) < shreshold:
-                return angles_current
-            J = KinematicUtils.jacobian(dh_table)
-            # Jv = J[0:3, :]
-            # delta_angles = learning_rate * damped_pinv(Jv, damping=0.1) @ error
-            delta_angles = learning_rate * np.linalg.pinv(J) @ po_error
-            angles_current += delta_angles
+                return current_joint_inputs
+            J = KinematicUtils.jacobian(po_matrixs_getter = po_matrixs_getter,
+                                        joint_inputs = current_joint_inputs)
+            delta_inputs = learning_rate * np.linalg.pinv(J) @ po_error
+            current_joint_inputs = np.array(current_joint_inputs) + delta_inputs
+            current_joint_inputs = current_joint_inputs.tolist()
         
         raise RuntimeError("Inverse Kinematic Analysis Failed...")
     

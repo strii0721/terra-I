@@ -1,3 +1,11 @@
+#
+# Author:       strii0721
+# Email:        strii0721@outlook.com
+# Created on:   Thu Jul 10 2025
+#
+# Copyright (c) 2025 S.I.C.
+#
+
 import numpy as np
 from utils.kinematic_utils import KinematicUtils
 from numpy import sin as s, cos as c
@@ -136,7 +144,7 @@ class Configuration:
                     ])
                     consecutive_endpoint_vector = np.array([0, 0, -lam])
                     
-    def enable_inverse_kinematic(self,
+    def enabled_inverse_kinematic(self,
                                  names: list) -> None:
         """Specify reference systems or components to participate in inverse kinematics analysis. This function is recommended to be called after the entire robotic arm has been constructed (using Configuration.confirm_construct()).
     
@@ -197,13 +205,13 @@ class Configuration:
     
     def get_po_matrixs(self,
                        inputs:list) -> dict:
-        """Perform forward kinematic analysis and return position-orientation matrixs of each reference frame.
+        """Perform forward kinematic analysis and return position-orientation matrixs of each joints and reference frame.
     
         Args:
             inputs (list): Input sequence.
     
         Returns:
-            dict: Position-orientation matrix of each joints from base to tip.
+            dict: Position-orientation matrix of each joints and reference frame.
         """
         
         if len(inputs) != self.rotation_joint_num + self.prismatic_joint_num:
@@ -224,3 +232,40 @@ class Configuration:
             last_po_matrix = last_po_matrix @ transformation_matrix
             po_matrixs[component["name"]] = last_po_matrix
         return po_matrixs
+    
+    def get_ik_po_matrixs(self, 
+                          inputs:list) -> dict:
+        """Perform forward kinematic analysis and return position-orientation matrixs of joints and reference frames that enabled inverse kinematic analysis.
+    
+        Args:
+            inputs (list): Input sequence.
+    
+        Returns:
+            dict: Position-orientation matrix of joints and reference frames that enabled inverse kinematic analysis.
+        """
+        
+        po_matrixs_dict:dict = self.get_po_matrixs(inputs)
+        ik_po_matrics = {}
+        for name, po_matrix in po_matrixs_dict.items():
+            if name in self.inverse_kinematics_enabled:
+                ik_po_matrics[name] = po_matrix
+                
+        return ik_po_matrics
+    
+    def apply_inverse_kinematic_analysis(self,
+                                         target_po_matrix:np.typing.NDArray,
+                                         current_joint_inputs:list) -> list:
+        """Apply inverse kinematic analysis on joints and reference frames that enabled inverse kinematic analysis.
+    
+        Args:
+            target_po_matrix (np.typing.NDArray):   Target given position-orientation.
+            current_joint_inputs (list):            Current joint inputs.
+    
+        Returns:
+            list: Target joint inputs that make end of the configuration reach a given position-orientation.
+        """
+        
+        target_joint_inputs = KinematicUtils.inverse_kinematics(po_matrixs_getter = self.get_ik_po_matrixs,
+                                                                target_po_matrix = target_po_matrix,
+                                                                current_joint_inputs = current_joint_inputs)
+        return target_joint_inputs
