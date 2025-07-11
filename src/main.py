@@ -13,6 +13,7 @@ from model.components.rotation_joint import RotationJoint
 from kinematics.dh_tables import Config4V3
 from utils.kinematic_utils import KinematicUtils
 from math import pi
+from services.renderer import Renderer
 
 import numpy as np
 
@@ -67,5 +68,9 @@ inputs = [0, 0, -3*pi/2]
 #     print(f"{po_matrix}\n")
 
 # Test for inverse kinematics
-target_po_matrix = list(left_arm.get_po_matrixs(inputs).values())[-1]
-target_joint_iniputs = left_arm.apply_inverse_kinematic_analysis(target_po_matrix = target_po_matrix)
+# target_po_matrix = list(left_arm.get_po_matrixs(inputs).values())[-1]
+# target_joint_iniputs = left_arm.apply_inverse_kinematic_analysis(target_po_matrix = target_po_matrix)
+
+renderer = Renderer()
+renderer.add_lines(left_arm.get_render_list())
+renderer.render()

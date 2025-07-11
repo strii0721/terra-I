@@ -313,6 +313,14 @@ class RoboticArm:
         
     def control(self,
                 inputs:list) -> None:
+        """Perform a control of the robotic arm. Please note that the input through this function will change the state of the current robot arm instance.
+    
+        Args:
+            inputs (list): Input sequence.
+    
+        Returns:
+            None.
+        """
         po_matrixs = self.get_po_matrixs(inputs)
         component_names = self.components["name"].tolist()
         reference_frame_names = self.reference_frames["name"].tolist()
@@ -328,3 +336,24 @@ class RoboticArm:
                     idx = self.reference_frames[mask].index[0]
                     self.reference_frames.at[idx, "po_matrix"] = po_matrix
         self.set_joint_inputs(inputs)
+        
+    def get_render_list(self) -> list:
+        """Output the coordinate information of the components that the current component needs to render in list form, and pass it to the renderer for visualisation.
+    
+        Args:
+    
+        Returns:
+            list: A list of coordinate systems containing all components that need to be rendered.
+        """
+        
+        render_list = []
+        start_point = (0, 0, 0)
+        for idx, component in self.components.iterrows():
+            x_end_point = component["po_matrix"][0,3]
+            y_end_point = component["po_matrix"][1,3]
+            z_end_point = component["po_matrix"][2,3]
+            end_point = (x_end_point, y_end_point, z_end_point)
+            if component["entity"].visibility:
+                render_list.append([start_point, end_point])
+            start_point = end_point
+        return render_list
