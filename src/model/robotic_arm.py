@@ -23,7 +23,7 @@ from model.components.compunent_types import ComponentTypes as CT
 import pandas as pd
 from dk.logger.log4p import Log4P
 from model.components.reference_frame import ReferenceFrame
-
+import os
 
 class RoboticArm:
     
@@ -400,7 +400,12 @@ class RoboticArm:
                 self.reference_frames["entity"],
                 self.reference_frames["po_matrix"])
         }
-
+        os.system('cls' if os.name == 'nt' else 'clear')
+        self.logger.info(f"      ==   Kinematic Simulation System  ==")
+        self.logger.info(f"")
+        self.logger.info(f"Author: strii0721         Email:strii0721@outlook.com")
+        self.logger.info(f"")
+        self.logger.info(f"=====================================================")
         for name in track_object_names:
             entity = objects[name][0]
             po_matix = objects[name][1]
@@ -420,4 +425,4 @@ class RoboticArm:
                 case _:
                     pass
             self.logger.info(f"------------------------------------------------")
-        self.logger.info(f"================================================")
+        self.logger.info(f"=====================================================")
