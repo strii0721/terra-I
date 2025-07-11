@@ -10,10 +10,9 @@
 from model.robotic_arm import RoboticArm
 from model.components.link import Link
 from model.components.rotation_joint import RotationJoint
-from kinematics.dh_tables import Config4V3
-from utils.kinematic_utils import KinematicUtils
 from math import pi
 from services.renderer import Renderer
+from model.payload import Payload
 
 import numpy as np
 
@@ -49,28 +48,16 @@ left_arm.enabled_inverse_kinematic([
     "link_3-0"
 ])
 
-# print(left_arm.get_joint_outputs())
-
-# left_arm.control([-1.967235492231584e-09, -6.283185304944256, -4.7123889778553805])
-
-# print(left_arm.get_joint_outputs())
-
-inputs = [0, 0, -3*pi/2]
-# new_po_matrixs = left_arm.get_po_matrixs(inputs)
-# ori_po_matrixs = KinematicUtils.forward_kinematics(Config4V3.left(inputs))
-
-# for name, po_matrix in new_po_matrixs.items():
-#     print(f"{name}")
-#     print(f"{po_matrix}\n")
-# print(f"==========================")
-# for name, po_matrix in ori_po_matrixs.items():
-#     print(f"{name}")
-#     print(f"{po_matrix}\n")
-
-# Test for inverse kinematics
-# target_po_matrix = list(left_arm.get_po_matrixs(inputs).values())[-1]
-# target_joint_iniputs = left_arm.apply_inverse_kinematic_analysis(target_po_matrix = target_po_matrix)
-
 renderer = Renderer()
-renderer.add_lines(left_arm.get_render_list())
-renderer.render()
+payload = Payload()
+
+for suffix in range(1000):
+    renderer.clean_lines()
+    renderer.clean_faces()
+    inputs = [0, pi/1000 * suffix, -pi/1000 * suffix]
+    left_arm.control(inputs)
+    
+    renderer.add_lines(left_arm.get_render_list())
+    renderer.add_faces(payload.get_render_list())
+    renderer.render()
+    
