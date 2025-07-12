@@ -24,7 +24,12 @@ from visualization.renderer import Renderer
 from models.hull import Hull
 from math import pi
 from controllers.simulation_controller import SimulationController
-from enums.render_object_types import RenderObjectTypes
+from utils.kinematic_utils import KinematicUtils
+import time
+from dk.logger.log4p import Log4P
+
+CONTROL_INTERVAL = 0.1
+RENDER_INTERVAL = 0.1
 
 left_arm = RoboticArm()
 left_arm.construct(Link("link_0-0", np.array([5.1, 0, 0])))\
@@ -38,7 +43,7 @@ left_arm.construct(Link("link_0-0", np.array([5.1, 0, 0])))\
     .construct(Link("link_2-2", np.array([0, 22.8, 0])))\
     .construct(RotationalJoint("la-j3", np.array([0, 1, 0]), initial_control_variable = -pi))\
     .construct(Link("link_3-0", np.array([250, 0, 0])))
-    
+hull = Hull()
 controller = SimulationController(left_arm).initialize()
 inverse_kinematic_analysis_basis = ["_rf-1",
                                     "_rf-2",
@@ -48,18 +53,19 @@ listem_to = ["la-j1",
              "la-j2",
              "la-j3",
              "link_3-0"]
-controller.enable_inverse_kinematic(inverse_kinematic_analysis_basis)
+controller.bind_inverse_kinematic_analysis_basis(inverse_kinematic_analysis_basis)
 renderer = Renderer()
-hull = Hull()
-
-
-for suffix in range(1000):
-    renderer.clean_lines()
-    renderer.clean_faces()
-    delta_control_variable_list = [0, pi/1000, pi/1000]
-    controller.delta_input(delta_control_variable_list)
-    controller.listen(listem_to)
-    
-    renderer.add_lines(left_arm.retrieve_render_list(RenderObjectTypes.LINE))
-    renderer.add_faces(hull.retrieve_render_list(RenderObjectTypes.FACE))
-    renderer.render()
+current_control_variable_list = controller.standard_output()
+target_control_variable_list = [0, 0, -1*pi/4]
+target_pose_matrix = KinematicUtils.calculate_pose_matrix_dict(left_arm,
+                                                                   target_control_variable_list)["link_3-0"]
+start = time.time()
+calculated_result = KinematicUtils.inverse_kinematics(left_arm,
+                                                          target_pose_matrix,
+                                                          current_control_variable_list,
+                                                          learning_rate = 0.2,
+                                                          enable_log = False)
+end = time.time()
+logger = Log4P()
+logger.info(f"Calculation time: {end-start:.6f} sec")
+logger.info(f"Target control variables: {calculated_result}")

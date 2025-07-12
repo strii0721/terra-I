@@ -16,42 +16,31 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from models.interfaces.dh_assembly import DhAssembly
+from models.interfaces.assembly import Assembly
+from kinematics.interfaces.kinematic_computing import KinematicComputing
 import pandas as pd
 from enums.render_object_types import RenderObjectTypes
 from utils.data_frame_utils import DataFrameUtils
 from enums.part_types import PartTypes
 from models.reference_frame import ReferenceFrame
 
-class RoboticArm(DhAssembly):
+class RoboticArm(Assembly, KinematicComputing):
     
     def __init__(self) -> None:
-        self._parts = pd.DataFrame(columns = [
-            "index",
-            "entity",
-            "bound_reference_frame_index",
-            "pose_matrix"
-        ])
-        self.parts["pose_matrix"] = self.parts["pose_matrix"].astype(object)
-        self._reference_frames = pd.DataFrame(columns = [
-            "index",
-            "entity",
-            "pose_matrix"
-        ])
-        self.reference_frames["pose_matrix"] = self.reference_frames["pose_matrix"].astype(object)
-        self._inverse_kinematic_analysis_basis = []
-    
-    @property
-    def parts(self) -> pd.DataFrame:
-        return self._parts
-    
-    @property
-    def reference_frames(self) -> pd.DataFrame:
-        return self._reference_frames
-    
-    @property
-    def inverse_kinematic_analysis_basis(self) -> list:
-        return self._inverse_kinematic_analysis_basis
+        self.parts = pd.DataFrame({
+            "index": pd.Series(dtype = "str"),
+            "entity": pd.Series(dtype = "object"),
+            "bound_reference_frame_index": pd.Series(dtype = "str"),
+            "pose_matrix": pd.Series(dtype = "object")
+        })
+        # self.parts["pose_matrix"] = self.parts["pose_matrix"].astype(object)
+        self.reference_frames = pd.DataFrame({
+            "index": pd.Series(dtype = "str"),
+            "entity": pd.Series(dtype = "object"),
+            "pose_matrix": pd.Series(dtype = "object")
+        })
+        # self.reference_frames["pose_matrix"] = self.reference_frames["pose_matrix"].astype(object)
+        self.inverse_kinematic_analysis_basis = []
     
     def retrieve_render_list(self,
                              render_object_type:RenderObjectTypes) -> list:
@@ -87,7 +76,7 @@ class RoboticArm(DhAssembly):
         if name in existed_name_list:
             raise Exception("Name conflict...")
         new_row = {"index": name, "entity": part, "pose_matrix": None}
-        DataFrameUtils.append(self.parts, new_row)
+        self.parts = DataFrameUtils.append(self.parts, new_row)
         return self
         
     def bind_reference_frame(self) -> None:
@@ -103,7 +92,7 @@ class RoboticArm(DhAssembly):
         reference_frame_name:str = f"_rf-{reference_frame_idx}"
         reference_frame = ReferenceFrame(reference_frame_name)
         new_row = {"index": reference_frame_name, "entity": reference_frame}
-        DataFrameUtils.append(self.reference_frames, new_row)
+        self.reference_frames = DataFrameUtils.append(self.reference_frames, new_row)
         for idx, part in self.parts.iterrows():
             match part["entity"].type:
                 case PartTypes.LINK:
@@ -113,7 +102,7 @@ class RoboticArm(DhAssembly):
                     reference_frame_name = f"_rf-{reference_frame_idx}"
                     self.parts.at[idx, "bound_reference_frame_index"] = reference_frame_name
                     new_row = {"index": reference_frame_name, "entity": reference_frame, "pose_matrix": None}
-                    DataFrameUtils.append(self.reference_frames, new_row)
+                    self.reference_frames = DataFrameUtils.append(self.reference_frames, new_row)
                     
     def initialize(self) -> None:
         """Actions after configuration construct completed.
@@ -140,7 +129,7 @@ class RoboticArm(DhAssembly):
                 control_variable_list.append(part["entity"].control_variable)
         return control_variable_list
     
-    def retrive_control_variable_num(self) -> int:
+    def retrive_joint_num(self) -> int:
         control_variable_num = 0
         for _, part in self.parts.iterrows():
             if part["entity"].type in [PartTypes.ROTATIONAL_JOINT]:

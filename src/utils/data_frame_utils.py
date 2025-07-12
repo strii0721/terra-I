@@ -22,5 +22,6 @@ class DataFrameUtils:
     
     @staticmethod
     def append(data_frame:pd.DataFrame,
-               new_row:dict) -> None:
-        data_frame.loc[len(data_frame)] = new_row
+               new_row:dict) -> pd.DataFrame:
+        new_data_frame = pd.concat([data_frame, pd.DataFrame([new_row])], ignore_index = True)
+        return new_data_frame

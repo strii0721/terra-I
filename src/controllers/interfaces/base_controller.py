@@ -16,25 +16,25 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from abc import ABC, abstractmethod
+from typing import Protocol
 from models.interfaces.assembly import Assembly
 
-class BaseController(ABC):
+class BaseController(Protocol):
+       
+    control_object: Assembly
     
-    @property
-    @abstractmethod
-    def control_object(self) -> Assembly:
-        pass
+    control_interval: float
     
-    @abstractmethod
     def initialize(self) -> None:
         pass
     
-    @abstractmethod
     def standard_input(self,
                        control_variable_list:list) -> None:
         pass
     
-    @abstractmethod
+    def delta_input(self,
+                    delta_control_variable_list:list) -> None:
+        pass
+    
     def standard_output(self) -> list:
         pass

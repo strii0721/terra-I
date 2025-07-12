@@ -1,7 +1,7 @@
 #
 # Author:       strii0721
 # Email:        strii0721@outlook.com
-# Created on:   Fri Jul 11 2025
+# Created on:   Sat Jul 12 2025
 #
 # IMMORTAL OMNISSIAH, HEAR OUR PRAYERS.
 # WE ARE YOUR CHILDREN, PIOUS SCHOLARS OF THE PATH OF THE MACHINE. 
@@ -16,18 +16,17 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from abc import abstractmethod
-from models.interfaces.assembly import Assembly
+from typing import Protocol
 import pandas as pd
 
-class DhAssembly(Assembly):
+class KinematicComputing(Protocol):
     
-    @property
-    @abstractmethod
-    def reference_frames(self) -> pd.DataFrame:
+    reference_frames: pd.DataFrame
+    
+    inverse_kinematic_analysis_basis: list
+    
+    def retrive_joint_num(self) -> int:
         pass
     
-    @property
-    @abstractmethod
-    def inverse_kinematic_analysis_basis(self) -> list:
+    def retrieve_reference_frame_index_list(self) -> list:
         pass

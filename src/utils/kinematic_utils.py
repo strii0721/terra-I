@@ -21,6 +21,14 @@ from numpy import sin as s, cos as c
 import scipy
 from math import sqrt
 from utils.spatial_utils import SpatialUtils
+from dk.logger.log4p import Log4P
+from models.interfaces.assembly import Assembly
+from kinematics.interfaces.kinematic_computing import KinematicComputing
+from enums.part_types import PartTypes
+from typing import Protocol
+
+class ComputableAssembly(Assembly, KinematicComputing, Protocol):
+    pass
 
 class KinematicUtils:
     
@@ -181,3 +189,190 @@ class KinematicUtils:
         z_vector = SpatialUtils.normalize_vector(po_matrix[:3, 2])
         
         return x_vector, y_vector, z_vector
+    
+    @staticmethod
+    def calculate_compensation_transformation_matrix_dict(control_object:ComputableAssembly,
+                                                          control_variables:list) -> dict:
+        """Calculate the transformation matrix between each part and its bound reference frame.
+    
+        Args:
+            control_variable_list (list): Input sequence.
+    
+        Returns:
+            dict: A dict of transformation matrix between each part and its bound reference frame.
+        """
+        
+        transformation_matrix_dict = {}
+        control_variables_enum = enumerate(control_variables)
+        consecutive_endpoint_vector = np.array([0, 0, 0], dtype=np.float64)
+        for _, part in control_object.parts.iterrows():
+            match part["entity"].type:
+                case PartTypes.LINK:
+                    consecutive_endpoint_vector += part["entity"].endpoint_vector
+                    endpoint_vector = part["entity"].endpoint_vector
+                    x = endpoint_vector[0]
+                    y = endpoint_vector[1]
+                    z = endpoint_vector[2]
+                    transformation_matrix_dict[part["index"]] = np.array([
+                        [1, 0, 0, x],
+                        [0, 1, 0, y],
+                        [0, 0, 1, z],
+                        [0, 0, 0, 1]
+                    ])
+                case PartTypes.ROTATIONAL_JOINT:
+                    _, control_variable = next(control_variables_enum)
+                    rotation_direction = part["entity"].rotation_direction
+                    lam = KinematicUtils.calculate_lambda(consecutive_endpoint_vector,
+                                                          rotation_direction)
+                    transformation_matrix_dict[part["index"]] = np.array([
+                        [c(control_variable), -s(control_variable), 0, 0],
+                        [s(control_variable), c(control_variable), 0, 0],
+                        [0, 0, 1, -lam],
+                        [0, 0, 0, 1]
+                    ])
+                    consecutive_endpoint_vector = np.array([0, 0, -lam])
+        return transformation_matrix_dict
+    
+    @staticmethod
+    def calculate_dh_table(control_object:ComputableAssembly,
+                           control_variables:list) -> list:
+        """Generate standard D-H table from given inputs. It should be noted that the generated D-H table is the parameters of each reference frame rather than each joint.
+    
+        Args:
+            inputs (list): Input sequence.
+    
+        Returns:
+            None.
+        """
+        
+        if len(control_variables) != control_object.retrive_joint_num():
+            raise Exception("The number of input signals does not match the number of joints...")
+        control_variables_enum = enumerate(control_variables)
+        last_control_variable = 0.0
+        consecutive_endpoint_vector = np.array([0.0, 0.0, 0.0])
+
+        dh_table = [(0.0, 0.0, 0.0, 0.0)]
+        for _, part in control_object.parts.iterrows():
+            match part["entity"].type:
+                case PartTypes.LINK:
+                    consecutive_endpoint_vector = consecutive_endpoint_vector + part["entity"].endpoint_vector
+
+                case PartTypes.ROTATIONAL_JOINT:
+                    rotation_direction = part["entity"].rotation_direction
+                    dh_parameters= KinematicUtils.calculate_dh_parameters(consecutive_endpoint_vector,
+                                                                          rotation_direction)
+                    last_rotation_angle = last_control_variable
+                    dh_parameters = list(dh_parameters)
+                    dh_parameters[0] += last_rotation_angle
+                    dh_parameters = tuple(dh_parameters)
+                    dh_table.append(dh_parameters)
+                    lam = KinematicUtils.calculate_lambda(consecutive_endpoint_vector,
+                                                          rotation_direction)
+                    consecutive_endpoint_vector = np.array([0, 0, -lam])
+                    _, rotation_rad = next(control_variables_enum)
+                    last_control_variable = rotation_rad        
+        return dh_table
+    
+    @staticmethod
+    def calculate_pose_matrix_dict(control_object:ComputableAssembly,
+                                   control_variable_list:list) -> dict:
+        """Perform forward kinematic analysis and return position-orientation matrixs of each joints and reference frame.
+    
+        Args:
+            inputs (list): Input sequence.
+    
+        Returns:
+            dict: Position-orientation matrix of each joints and reference frame.
+        """
+        
+        if len(control_variable_list) != control_object.retrive_joint_num():
+            raise Exception("The number of input signals does not match the number of joints...")
+        dh_table = KinematicUtils.calculate_dh_table(control_object,
+                                                     control_variable_list)
+        compensate_transformation_matrixs_dict = KinematicUtils.calculate_compensation_transformation_matrix_dict(control_object,
+                                                                                                                  control_variable_list)
+        names = control_object.retrieve_reference_frame_index_list()
+        reference_frame_pose_matrixs = KinematicUtils.cascade_forward_kinematics(dh_table = dh_table,
+                                                                       names = names)
+        reference_frame_pose_matrixs_enum = enumerate(reference_frame_pose_matrixs.items())
+        pose_matrixs_dict = {}
+        reference_frame_name= None
+        last_pose_matrix = np.eye(4)
+        for _, part in control_object.parts.iterrows():
+            if part["bound_reference_frame_index"] != reference_frame_name or reference_frame_name is None:
+                _, (reference_frame_name, last_pose_matrix) = next(reference_frame_pose_matrixs_enum)
+                pose_matrixs_dict[reference_frame_name] = last_pose_matrix
+            part_index = part["index"]
+            transformation_matrix = compensate_transformation_matrixs_dict[part_index]
+            last_pose_matrix = last_pose_matrix @ transformation_matrix
+            pose_matrixs_dict[part_index] = last_pose_matrix
+        return pose_matrixs_dict
+    
+    @staticmethod
+    def cascade_forward_kinematics(dh_table:list, 
+                                   names: list) -> dict:
+        """Perform forward kinematic analysis to reference frames.
+    
+        Args:
+            dh_table (list):   Target D-H table.
+            names (list):                   Target joint number.
+    
+        Returns:
+            dict: Position-orientation matrix of reference frames from base to tip.
+        """
+        
+        pose_matrix = np.eye(4)
+        pose_matrixs_dict = {}
+        for idx, row in enumerate(dh_table):
+            transformation_matrix = KinematicUtils.calculate_dh_transformation_matrix(*row)
+            pose_matrix = pose_matrix @ transformation_matrix
+            name = names[idx]
+            pose_matrixs_dict[name] = pose_matrix
+        return pose_matrixs_dict
+    
+    @staticmethod
+    def inverse_kinematics(control_object:ComputableAssembly,
+                           target_pose_matrix:np.typing.NDArray, 
+                           current_control_variable_list:list, 
+                           max_iteration:int = 10000, 
+                           shreshold:float = 1e-3, 
+                           learning_rate:float = 0.1,
+                           enable_log = False):
+        """Perform forward kinematic analysis.
+    
+        Args:
+            po_matrixs_getter (function):           A function for obtaining the pose matrices of all coordinate systems and joints involved in the calculation.
+            target_po_matrix (np.typing.NDArray):   Target position-orientation matirx.
+            current_joint_outputs (list):           Curent outputs of each joint
+            max_iteration (int):                    Maximum number of iterations.
+            shreshold (float):                      Threshold of error vector norm.
+            learning_rate (float):                  Learning rate.
+    
+        Returns:
+            list: An input sequence that can let end of robotic arm reach a given position and orientation.
+        """
+        logger = Log4P()
+        for i in range(max_iteration):
+            pose_matrixs_dict = KinematicUtils.calculate_pose_matrix_dict(control_object,
+                                                                          current_control_variable_list)
+            current_pose_matrix = list(pose_matrixs_dict.values())[-1]
+            po_error = KinematicUtils.calculate_pose_error(target_pose_matrix, current_pose_matrix)
+            if enable_log:
+                logger.info(f"[{i}] error norm = {np.linalg.norm(po_error):.6f}, current_control_variables = {current_control_variable_list}")
+            if np.linalg.norm(po_error) < shreshold:
+                return current_control_variable_list
+            basis_names = control_object.inverse_kinematic_analysis_basis
+            basis_pose_matrixs = []
+            for name in basis_names:
+                basis_pose_matrixs.append(pose_matrixs_dict[name])
+            J = KinematicUtils.calculate_jacobian_matrix(basis_pose_matrixs)
+            delta_control_variables = learning_rate * np.linalg.pinv(J) @ po_error
+            new_control_variables = np.array(current_control_variable_list) + delta_control_variables
+            current_control_variable_list = new_control_variables.tolist()
+        raise RuntimeError("Inverse Kinematic Analysis Failed...")
+    
+    def calculate_trajactory(self,
+                             current_pose_matrix:np.typing.NDArray,
+                             target_pose_matrix:np.typing.NDArray,
+                             steps:50):
+        pass

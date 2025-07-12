@@ -22,18 +22,16 @@ import os
 from dk.logger.log4p import Log4P
 from utils.kinematic_utils import KinematicUtils
 from enums.part_types import PartTypes
-from kinematics.kinematic_computer import KinematicComputer
 from typing import Self
+import numpy as np
 
 class SimulationController(BaseController):
     
     def __init__(self,
-                 control_object:RoboticArm):
-        self._control_object = control_object
-    
-    @property
-    def control_object(self) -> RoboticArm:
-        return self._control_object
+                 control_object:RoboticArm,
+                 control_interval:float = 0.1):
+        self.control_object = control_object
+        self.control_interval = control_interval
     
     def initialize(self) -> Self:
         self.control_object.initialize()
@@ -43,8 +41,7 @@ class SimulationController(BaseController):
     
     def standard_input(self,
                        control_variable_list:list) -> None:
-        kinematic_computer = KinematicComputer()
-        pose_matrixs_dict = kinematic_computer.calculate_pose_matrixs(self.control_object,
+        pose_matrixs_dict = KinematicUtils.calculate_pose_matrix_dict(self.control_object,
                                                                       control_variable_list)
         self.control_object.update_control_variable(control_variable_list)
         self.control_object.update_pose_matrix(pose_matrixs_dict)
@@ -100,11 +97,11 @@ class SimulationController(BaseController):
             x, y, z = KinematicUtils.calculate_position_from_po_matrix(po_matix)
             x_vector, y_vector, z_vector = KinematicUtils.calculate_orientation_from_po_matrix(po_matix)
             logger.info(f"Name: {name}")
-            logger.info(f"Position: x = {x}    y = {y}    z = {z}")
+            logger.info(f"Position: x = {x:.6f}    y = {y:.6f}    z = {z:.6f}")
             logger.info(f"Orientation:")
-            logger.info(f" - X-Axis: {x_vector}")
-            logger.info(f" - Y-Axis: {y_vector}")
-            logger.info(f" - Z-Axis: {z_vector}")
+            logger.info(f" - X-Axis: {np.round(x_vector, decimals=6)}")
+            logger.info(f" - Y-Axis: {np.round(y_vector, decimals=6)}")
+            logger.info(f" - Z-Axis: {np.round(z_vector, decimals=6)}")
             match entity.type:
                 case PartTypes.ROTATIONAL_JOINT:
                     logger.info(f"Current Output: {entity.control_variable}")
@@ -113,7 +110,7 @@ class SimulationController(BaseController):
             logger.info(f"------------------------------------------------")
         logger.info(f"===========================================================")
         
-    def enable_inverse_kinematic(self,
+    def bind_inverse_kinematic_analysis_basis(self,
                                  names: list) -> None:
         """Specify reference systems or components to participate in inverse kinematics analysis. This function is recommended to be called after the entire robotic arm has been constructed (using Configuration.confirm_construct()).
     

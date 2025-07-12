@@ -23,12 +23,8 @@ from enums.render_object_types import RenderObjectTypes
 class Hull(Assembly):
     
     def __init__(self) -> None:
-        self._parts = pd.DataFrame()
+        self.parts = pd.DataFrame()
         
-    
-    @property
-    def parts(self) -> pd.DataFrame:
-        return self._parts
     
     def retrieve_render_list(self,
                              render_object_type:RenderObjectTypes) -> list:

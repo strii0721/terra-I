@@ -17,17 +17,8 @@
 #
 
 from models.interfaces.part import Part
-from abc import abstractmethod
+from typing import Protocol
 
-class Joint(Part):
+class Joint(Part, Protocol):
     
-    @property
-    @abstractmethod
-    def control_variable(self) -> float:
-        pass
-    
-    @control_variable.setter
-    @abstractmethod
-    def control_variable(self,
-                         control_variable:float):
-        pass
+    control_variable: float

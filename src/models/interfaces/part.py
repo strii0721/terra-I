@@ -16,22 +16,13 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from abc import ABC, abstractmethod
+from typing import Protocol
 from enums.part_types import PartTypes
 
-class Part(ABC):
+class Part(Protocol):
     
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        pass
+    name: str
     
-    @property
-    @abstractmethod
-    def type(self) -> PartTypes:
-        pass
-    
-    @property
-    @abstractmethod
-    def visibility(self) -> bool:
-        pass
+    type: PartTypes
+
+    visibility: bool
