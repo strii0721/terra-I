@@ -28,27 +28,29 @@ This runtime is using "average trajactory plan"
 '''
 
 # Variable Area #########################################################
-target_pose_matrix_list = []
-target_control_variable_lists = [
-    [-pi/2, 0, -pi],
-    [-pi/2, pi/4, -pi],
-    [-pi/2, pi/4, 1e-1],
-]
-for target_control_variable_list in target_control_variable_lists:
-    target_pose_matrix_list.append(KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM,
-                                                                             target_control_variable_list)["link_3-0"])
+# target_pose_matrix_list = []
+# target_control_variable_lists = [
+#     [-pi/2, 0, -pi],
+#     [-pi/2, pi/4, -pi],
+#     [-pi/2, pi/4, 1e-1],
+# ]
+# for target_control_variable_list in target_control_variable_lists:
+#     target_pose_matrix_list.append(KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM,
+#                                                                              target_control_variable_list)["link_3-0"])
 #########################################################################
   
 # Exports ###############################################################
 THREAD_LIST = [
-    Thread(target = CFG.CONTROLLER.listen_daemon, args = (CFG.LISTEN_LIST,)),
-    Thread(target = CFG.CONTROLLER.target_input, args = (target_pose_matrix_list,
-                                                         KinematicUtils.average_trajactory_plan))
+    Thread(target = CFG.L_CONTROLLER.listen_daemon, args = (CFG.L_LISTEN_LIST,)),   
+    # Thread(target = CFG.R_CONTROLLER.listen_daemon, args = (CFG.R_LISTEN_LIST,)),
+    # Thread(target = CFG.CONTROLLER_L.target_input, args = (target_pose_matrix_list,
+    #                                                        KinematicUtils.average_trajactory_plan))
 ]
 def FRAME():
     CFG.RENDERER.clean_lines()
     CFG.RENDERER.clean_faces()
-    CFG.RENDERER.add_lines(CFG.LEFT_ARM.retrieve_render_list(RenderObjectTypes.LINE))
     CFG.RENDERER.add_faces(CFG.HULL.retrieve_render_list(RenderObjectTypes.FACE))
+    CFG.RENDERER.add_lines(CFG.LEFT_ARM.retrieve_render_list(RenderObjectTypes.LINE))
+    CFG.RENDERER.add_lines(CFG.RIGHT_ARM.retrieve_render_list(RenderObjectTypes.LINE))
     CFG.RENDERER.render()
 ########################################################################

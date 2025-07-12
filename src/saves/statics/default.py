@@ -27,34 +27,62 @@ from controllers.simulation_controller import SimulationController
 
 CONTROL_INTERVAL = 0.1
 RENDER_INTERVAL = 0.1
-INVERSE_KINEMATIC_ANALYSIS_BASIS = [
+L_INVERSE_KINEMATIC_ANALYSIS_BASIS = [
     "_rf-1",
     "_rf-2",
     "_rf-3",
-    "link_3-0"
+    "l-link_3-0"
 ]
-LISTEN_LIST = [
+R_INVERSE_KINEMATIC_ANALYSIS_BASIS = [
+    "_rf-1",
+    "_rf-2",
+    "_rf-3",
+    "r-link_3-0"
+]
+L_LISTEN_LIST = [
     "la-j1",
     "la-j2",
     "la-j3",
-    "link_3-0"
+    "l-link_3-0"
 ]
-LEFT_ARM = RoboticArm()\
-    .construct(Link("link_0-0", np.array([5.1, 0, 0])))\
-    .construct(Link("link_0-1", np.array([0, 5.3, 0])))\
-    .construct(RotationalJoint("la-j1", np.array([0, 1, 0])))\
-    .construct(Link("link_1-0", np.array([30.891, 0, 0])))\
-    .construct(Link("link_1-1", np.array([0, -19.45, 0])))\
-    .construct(RotationalJoint("la-j2", np.array([0, -1, 0])))\
-    .construct(Link("link_2-0", np.array([0, 0, -19.45])))\
-    .construct(Link("link_2-1", np.array([269.91, 0, 0])))\
-    .construct(Link("link_2-2", np.array([0, 22.8, 0])))\
-    .construct(RotationalJoint("la-j3", np.array([0, 1, 0]), initial_control_variable = -pi))\
-    .construct(Link("link_3-0", np.array([250, 0, 0])))
+R_LISTEN_LIST = [
+    "ra-j1",
+    "ra-j2",
+    "ra-j3",
+    "r-link_3-0"
+]
 HULL = Hull()
-CONTROLLER = SimulationController(LEFT_ARM, control_interval = CONTROL_INTERVAL)\
+LEFT_ARM = RoboticArm()\
+    .construct(Link("l-link_0-0", np.array([5.1, 0, 0])))\
+    .construct(Link("l-link_0-1", np.array([0, 5.3, 0])))\
+    .construct(RotationalJoint("la-j1", np.array([0, 1, 0])))\
+    .construct(Link("l-link_1-0", np.array([30.891, 0, 0])))\
+    .construct(Link("l-link_1-1", np.array([0, -19.45, 0])))\
+    .construct(RotationalJoint("la-j2", np.array([0, -1, 0])))\
+    .construct(Link("l-link_2-0", np.array([0, 0, -19.45])))\
+    .construct(Link("l-link_2-1", np.array([269.91, 0, 0])))\
+    .construct(Link("l-link_2-2", np.array([0, 22.8, 0])))\
+    .construct(RotationalJoint("la-j3", np.array([0, 1, 0]), initial_control_variable = -pi))\
+    .construct(Link("l-link_3-0", np.array([250, 0, 0])))
+L_CONTROLLER = SimulationController(LEFT_ARM, control_interval = CONTROL_INTERVAL)\
     .initialize()\
-    .bind_inverse_kinematic_analysis_basis(INVERSE_KINEMATIC_ANALYSIS_BASIS)
+    .bind_inverse_kinematic_analysis_basis(L_INVERSE_KINEMATIC_ANALYSIS_BASIS)
+RIGHT_ARM = RoboticArm()\
+    .construct(Link("r-link_0-0", np.array([360, 134.1, 0]), visibility = False))\
+    .construct(Link("r-link_0-1", np.array([-5.1, 0, 0])))\
+    .construct(Link("r-link_0-2", np.array([0, -5.3, 0])))\
+    .construct(RotationalJoint("ra-j1", np.array([0, -1, 0]), initial_control_variable = pi))\
+    .construct(Link("r-link_1-0", np.array([30.891, 0, 0])))\
+    .construct(Link("r-link_1-1", np.array([0, -19.45, 0])))\
+    .construct(RotationalJoint("ra-j2", np.array([0, -1, 0])))\
+    .construct(Link("r-link_2-0", np.array([0, 0, -19.45])))\
+    .construct(Link("r-link_2-1", np.array([269.91, 0, 0])))\
+    .construct(Link("r-link_2-2", np.array([0, 22.8, 0])))\
+    .construct(RotationalJoint("ra-j3", np.array([0, 1, 0]), initial_control_variable = pi))\
+    .construct(Link("r-link_3-0", np.array([250, 0, 0])))
+R_CONTROLLER = SimulationController(RIGHT_ARM, control_interval = CONTROL_INTERVAL)\
+    .initialize()\
+    .bind_inverse_kinematic_analysis_basis(R_INVERSE_KINEMATIC_ANALYSIS_BASIS)
 RENDERER = Renderer(render_interval = RENDER_INTERVAL)
 
 
