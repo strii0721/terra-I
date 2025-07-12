@@ -16,13 +16,40 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from model.components.compunent_types import ComponentTypes as CT
+from models.interfaces.joint import Joint
+from enums.part_types import PartTypes
+import numpy as np
 
-class ReferenceFrame:
+class RotationalJoint(Joint):
     
     def __init__(self,
                  name:str,
-                 visibility = False) -> None:
-        self.name = name
-        self.type = CT.REFERENCE_FRAME
-        self.visibility = visibility
+                 rotation_direction:np.typing.NDArray,
+                 initial_control_variable:float = 0,
+                 visibility:bool = True):
+        self._name = name
+        self._type = PartTypes.ROTATIONAL_JOINT
+        self.rotation_direction = rotation_direction
+        self._control_variable = initial_control_variable
+        self._visibility = visibility
+    
+    @property
+    def name(self) -> str:
+        return self._name
+    
+    @property
+    def type(self) -> PartTypes:
+        return self._type
+    
+    @property
+    def visibility(self) -> bool:
+        return self._visibility
+    
+    @property
+    def control_variable(self) -> float:
+        return self._control_variable
+    
+    @control_variable.setter
+    def control_variable(self,
+                         control_variable:float):
+        self._control_variable = control_variable

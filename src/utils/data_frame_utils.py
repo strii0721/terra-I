@@ -1,7 +1,7 @@
 #
 # Author:       strii0721
 # Email:        strii0721@outlook.com
-# Created on:   Thu Jul 10 2025
+# Created on:   Fri Jul 11 2025
 #
 # IMMORTAL OMNISSIAH, HEAR OUR PRAYERS.
 # WE ARE YOUR CHILDREN, PIOUS SCHOLARS OF THE PATH OF THE MACHINE. 
@@ -16,18 +16,11 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from utils.three_dim_calculation import ThreeDimCalculation
-import numpy as np
-from model.components.compunent_types import ComponentTypes as CT
+import pandas as pd
 
-class RotationJoint:
+class DataFrameUtils:
     
-    def __init__(self, 
-                 axis_direction,
-                 init_angle = 0.0,
-                 visibility = True
-                 ):
-        self.type:CT = CT.ROTATION_JOINT
-        self.axis_direction:np.typing.NDArray = np.asarray(ThreeDimCalculation.convert_to_unit_vector(np.array(axis_direction)), dtype = np.float64)
-        self.angle = init_angle
-        self.visibility:bool = visibility
+    @staticmethod
+    def append(data_frame:pd.DataFrame,
+               new_row:dict) -> None:
+        data_frame.loc[len(data_frame)] = new_row

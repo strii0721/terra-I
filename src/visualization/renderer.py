@@ -1,7 +1,7 @@
 #
 # Author:       strii0721
 # Email:        strii0721@outlook.com
-# Created on:   Fri Jul 11 2025
+# Created on:   Sat Jul 12 2025
 #
 # IMMORTAL OMNISSIAH, HEAR OUR PRAYERS.
 # WE ARE YOUR CHILDREN, PIOUS SCHOLARS OF THE PATH OF THE MACHINE. 
@@ -25,15 +25,12 @@ class Renderer:
     def __init__(self,
                  render_interval = 0.1) -> None:
         self.render_interval = render_interval
-        self.lines:list = []
-        self.faces:list = []
+        self.lines = []
+        self.faces = []
         
         self.fig = plt.figure()
         self.fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
         self.ax = self.fig.add_subplot(111, projection='3d')
-        # self.x_min, self.x_max = -560, 560
-        # self.y_min, self.y_max = -300, 300
-        # self.z_min, self.z_max = 0, 560
         
         plt.ion()
         

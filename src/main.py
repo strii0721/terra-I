@@ -1,7 +1,7 @@
 #
 # Author:       strii0721
 # Email:        strii0721@outlook.com
-# Created on:   Fri Jul 11 2025
+# Created on:   Sat Jul 12 2025
 #
 # IMMORTAL OMNISSIAH, HEAR OUR PRAYERS.
 # WE ARE YOUR CHILDREN, PIOUS SCHOLARS OF THE PATH OF THE MACHINE. 
@@ -16,68 +16,49 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-
-from model.robotic_arm import RoboticArm
-from model.components.link import Link
-from model.components.rotation_joint import RotationJoint
-from math import pi
-from services.renderer import Renderer
-from model.payload import Payload
-
+from models.robotic_arm import RoboticArm
+from models.link import Link
+from models.rotational_joint import RotationalJoint
 import numpy as np
+from visualization.renderer import Renderer
+from models.hull import Hull
+from math import pi
+from controllers.simulation_controller import SimulationController
+from enums.render_object_types import RenderObjectTypes
 
 left_arm = RoboticArm()
-left_arm.construct("link_0-0", 
-                   Link(np.array([5.1, 0, 0])))\
-        .construct("link_0-1", 
-                   Link(np.array([0, 5.3, 0])))\
-        .construct("la-j1", 
-                   RotationJoint(np.array([0, 1, 0])))\
-        .construct("link_1-0", 
-                   Link(np.array([30.891, 0, 0])))\
-        .construct("link_1-1", 
-                   Link(np.array([0, -19.45, 0])))\
-        .construct("la-j2", 
-                   RotationJoint(np.array([0, -1, 0])))\
-        .construct("link_2-0", 
-                   Link(np.array([0, 0, -19.45])))\
-        .construct("link_2-1", 
-                   Link(np.array([269.91, 0, 0])))\
-        .construct("link_2-2", 
-                   Link(np.array([0, 22.8, 0])))\
-        .construct("la-j3", 
-                   RotationJoint(np.array([0, 1, 0])))\
-        .construct("link_3-0", 
-                   Link(np.array([250, 0, 0])))\
-        .confirm_construct()
-        
-
-ik_names = [
-    "_rf-1",
-    "_rf-2",
-    "_rf-3",
-    "link_3-0"
-]
-track_names = [
-    "la-j1",
-    "la-j2",
-    "la-j3",
-    "link_3-0"
-]
-
-left_arm.enable_inverse_kinematic(ik_names)
-
+left_arm.construct(Link("link_0-0", np.array([5.1, 0, 0])))\
+    .construct(Link("link_0-1", np.array([0, 5.3, 0])))\
+    .construct(RotationalJoint("la-j1", np.array([0, 1, 0])))\
+    .construct(Link("link_1-0", np.array([30.891, 0, 0])))\
+    .construct(Link("link_1-1", np.array([0, -19.45, 0])))\
+    .construct(RotationalJoint("la-j2", np.array([0, -1, 0])))\
+    .construct(Link("link_2-0", np.array([0, 0, -19.45])))\
+    .construct(Link("link_2-1", np.array([269.91, 0, 0])))\
+    .construct(Link("link_2-2", np.array([0, 22.8, 0])))\
+    .construct(RotationalJoint("la-j3", np.array([0, 1, 0])))\
+    .construct(Link("link_3-0", np.array([250, 0, 0])))\
+    .confirm_construct()
+inverse_kinematic_analysis_basis = ["_rf-1",
+                                    "_rf-2",
+                                    "_rf-3",
+                                    "link_3-0"]
+listem_to = ["la-j1",
+             "la-j2",
+             "la-j3",
+             "link_3-0"]
+left_arm.enable_inverse_kinematic(inverse_kinematic_analysis_basis)
 renderer = Renderer()
-payload = Payload()
+hull = Hull()
+controller = SimulationController(left_arm)
 
 for suffix in range(1000):
     renderer.clean_lines()
     renderer.clean_faces()
-    inputs = [0, pi/1000 * suffix, -pi/1000 * suffix]
-    left_arm.control(inputs)
-    left_arm.track(track_names)
+    control_variables = [0, pi/1000 * suffix, -pi/1000 * suffix]
+    controller.standard_input(control_variables)
+    controller.listen(listem_to)
     
-    renderer.add_lines(left_arm.get_render_list())
-    renderer.add_faces(payload.get_render_list())
+    renderer.add_lines(left_arm.retrieve_render_list(RenderObjectTypes.LINE))
+    renderer.add_faces(hull.retrieve_render_list(RenderObjectTypes.FACE))
     renderer.render()
-    

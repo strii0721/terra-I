@@ -16,35 +16,29 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from datetime import datetime
-from dk.logger.enums.log_levels import LogLevels as LL
-import os
+from models.interfaces.part import Part
+from enums.part_types import PartTypes
+import numpy as np
 
-class Log4P:
+class Link(Part):
+    
     def __init__(self,
-                 log_file_path = "logs/log4p.log") -> None:
-        
-        self.log_file_path = log_file_path
-        
+                 name:str,
+                 endpoint_vector:np.typing.NDArray,
+                 visibility:bool = True):
+        self._name = name
+        self._type = PartTypes.LINK
+        self.endpoint_vector = endpoint_vector
+        self._visibility = visibility
     
-    def _log(self, 
-             level:LL, 
-             message:str) -> None:
-        
-        timestamp = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
-        log_string = ""
-        log_string += f"[{timestamp}] "
-        log_string += f"[{level.value}] "
-        log_string += f"{message}"
-        
-        os.makedirs(os.path.dirname(self.log_file_path), exist_ok=True)
-        print(log_string)
-        with open(self.log_file_path, "a") as f:
-            f.write(log_string)
-            f.write("\n")
+    @property
+    def name(self) -> str:
+        return self._name
     
-    def info(self, 
-             message:str) -> None:
-        self._log(LL.INFO,
-                  message)
-        
+    @property
+    def type(self) -> PartTypes:
+        return self._type
+    
+    @property
+    def visibility(self) -> bool:
+        return self._visibility

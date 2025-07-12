@@ -1,7 +1,7 @@
 #
 # Author:       strii0721
 # Email:        strii0721@outlook.com
-# Created on:   Thu Jul 10 2025
+# Created on:   Fri Jul 11 2025
 #
 # IMMORTAL OMNISSIAH, HEAR OUR PRAYERS.
 # WE ARE YOUR CHILDREN, PIOUS SCHOLARS OF THE PATH OF THE MACHINE. 
@@ -16,13 +16,13 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-
-from math import sqrt
 import numpy as np
+from math import sqrt
 
-class ThreeDimCalculation:
+class SpatialUtils:
     
-    def convert_to_unit_vector(vector:np.typing.NDArray) -> np.typing.NDArray:
+    @staticmethod
+    def normalize_vector(vector:np.typing.NDArray) -> np.typing.NDArray:
         """Return a unit vector align with a given vector.
     
         Args:
@@ -36,29 +36,30 @@ class ThreeDimCalculation:
         unit_vector = vector / magnitude
         return unit_vector
     
-    def calculate_rotation_angle_rad(start_vector:np.typing.NDArray, 
-                                     end_vector:np.typing.NDArray, 
-                                     normal:np.typing.NDArray):
-        """Calculate the angle between two spatial vectors, given the positive direction of the angle.
+    @staticmethod
+    def calculate_rotation_angle(vector_start:np.typing.NDArray,
+                                 vector_end:np.typing.NDArray, 
+                                 normal:np.typing.NDArray) -> float:
+        """Calculate the angle between two spatial vectors, given the positive direction of the angle. The result is in rad.
     
         Args:
-            start_vector (np.typing.NDArray):   Start vector.
-            end_vector (np.typing.NDArray):     End vector.
+            vector_start (np.typing.NDArray):   Start vector.
+            vector_end (np.typing.NDArray):     End vector.
             normal (np.typing.NDArray):         Positive direction of rotation.
     
         Returns:
             float: Angle of rotation from start vector to end vector, positive direction of rotation is vector normal.
         """
-        if np.linalg.norm(start_vector) < 1e-8 or np.linalg.norm(end_vector) < 1e-8: 
+        if np.linalg.norm(vector_start) < 1e-8 or np.linalg.norm(vector_end) < 1e-8: 
             return 0.0
         else:
-            start_vector = ThreeDimCalculation.convert_to_unit_vector(start_vector)
-            end_vector = ThreeDimCalculation.convert_to_unit_vector(end_vector)
-            cross_product = np.cross(start_vector, end_vector)
-            dot_product = np.dot(start_vector, end_vector)
+            vector_start = SpatialUtils.normalize_vector(vector_start)
+            vector_end = SpatialUtils.normalize_vector(vector_end)
+            cross_product = np.cross(vector_start, vector_end)
+            dot_product = np.dot(vector_start, vector_end)
             if np.linalg.norm(normal) < 1e-8:
                 normal = np.array([1, 0, 0])
-            normal = ThreeDimCalculation.convert_to_unit_vector(normal)
+            normal = SpatialUtils.normalize_vector(normal)
             sign = np.sign(np.dot(cross_product, normal))
             angle_rad = np.arctan2(np.linalg.norm(cross_product) * sign, dot_product)
             return angle_rad

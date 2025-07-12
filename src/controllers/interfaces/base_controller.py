@@ -1,7 +1,7 @@
 #
 # Author:       strii0721
 # Email:        strii0721@outlook.com
-# Created on:   Thu Jul 10 2025
+# Created on:   Fri Jul 11 2025
 #
 # IMMORTAL OMNISSIAH, HEAR OUR PRAYERS.
 # WE ARE YOUR CHILDREN, PIOUS SCHOLARS OF THE PATH OF THE MACHINE. 
@@ -16,10 +16,21 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from enum import Enum
+from abc import ABC, abstractmethod
+from models.interfaces.assembly import Assembly
 
-class ComponentTypes(Enum):
-    LINK = "LINK"
-    ROTATION_JOINT = "ROTATION_JOINT"
-    PRISMATIC_JOINT = "PRISMATIC_JOINT"
-    REFERENCE_FRAME = "REFERENCE_FRAME"
+class BaseController(ABC):
+    
+    @property
+    @abstractmethod
+    def control_object(self) -> Assembly:
+        pass
+    
+    @abstractmethod
+    def standard_input(self,
+                       control_variable_list:list) -> None:
+        pass
+    
+    @abstractmethod
+    def standard_output(self) -> list:
+        pass
