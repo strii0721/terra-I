@@ -31,6 +31,12 @@ class Renderer:
         self.fig = plt.figure()
         self.fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
         self.ax = self.fig.add_subplot(111, projection='3d')
+        self.max_x_min = -50
+        self.min_x_max = 400
+        self.max_y_min = -100
+        self.min_y_max = 300
+        self.max_z_min = -20
+        self.min_z_max = 200
         
         plt.ion()
         
@@ -43,9 +49,9 @@ class Renderer:
              
         # render lines
         for start_point, end_point in self.lines:
-            x_min, x_max =min(x_min, start_point[0], end_point[0]), max(x_max, start_point[0], end_point[0])
-            y_min, y_max =min(y_min, start_point[1], end_point[1]), max(y_max, start_point[1], end_point[1])
-            z_min, z_max =min(z_min, start_point[2], end_point[2]), max(z_max, start_point[2], end_point[2])
+            x_min, x_max =min(x_min, start_point[0], end_point[0], self.max_x_min), max(x_max, start_point[0], end_point[0], self.min_x_max)
+            y_min, y_max =min(y_min, start_point[1], end_point[1], self.max_y_min), max(y_max, start_point[1], end_point[1], self.min_y_max)
+            z_min, z_max =min(z_min, start_point[2], end_point[2], self.max_z_min), max(z_max, start_point[2], end_point[2], self.min_z_max)
             xs, ys, zs = zip(start_point, end_point)
             self.ax.plot(xs, ys, zs)
         

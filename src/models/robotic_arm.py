@@ -22,8 +22,6 @@ from enums.render_object_types import RenderObjectTypes
 from utils.data_frame_utils import DataFrameUtils
 from enums.part_types import PartTypes
 from models.reference_frame import ReferenceFrame
-from kinematics.kinematic_computer import KinematicComputer
-import numpy as np
 
 class RoboticArm(DhAssembly):
     
@@ -55,17 +53,6 @@ class RoboticArm(DhAssembly):
     def inverse_kinematic_analysis_basis(self) -> list:
         return self._inverse_kinematic_analysis_basis
     
-    def standard_input(self,
-                       control_variable:list) -> None:
-        kinematic_computer = KinematicComputer()
-        pose_matrixs_dict = kinematic_computer.calculate_pose_matrixs(self,
-                                                                 control_variable)
-        self.update_control_variable(control_variable)
-        self.update_pose_matrix(pose_matrixs_dict)
-    
-    def standard_output(self) -> list:
-        return self.retrieve_joint_control_variables()
-    
     def retrieve_render_list(self,
                              render_object_type:RenderObjectTypes) -> list:
         render_list = []
@@ -96,7 +83,7 @@ class RoboticArm(DhAssembly):
             Configuration: Returns the current instance for chained calls.
         """
         name = part.name
-        existed_name_list = self.retrieve_part_indexs()
+        existed_name_list = self.retrieve_part_index_list()
         if name in existed_name_list:
             raise Exception("Name conflict...")
         new_row = {"index": name, "entity": part, "pose_matrix": None}
@@ -128,7 +115,7 @@ class RoboticArm(DhAssembly):
                     new_row = {"index": reference_frame_name, "entity": reference_frame, "pose_matrix": None}
                     DataFrameUtils.append(self.reference_frames, new_row)
                     
-    def confirm_construct(self) -> None:
+    def initialize(self) -> None:
         """Actions after configuration construct completed.
     
         Args:
@@ -137,60 +124,40 @@ class RoboticArm(DhAssembly):
             None.
         """
         self.bind_reference_frame()
-        initial_control_variable = self.retrieve_joint_control_variables()
-        self.standard_input(initial_control_variable)
-        
-    def enable_inverse_kinematic(self,
-                                 names: list) -> None:
-        """Specify reference systems or components to participate in inverse kinematics analysis. This function is recommended to be called after the entire robotic arm has been constructed (using Configuration.confirm_construct()).
     
-        Args:
-            names (np.typing.NDArray): The names of the reference system or component that needs to participate in the inverse kinematics analysis.
-    
-        Returns:
-            None.
-        """
-        
-        part_names = self.retrieve_part_indexs()
-        reference_frame_names = self.retrieve_reference_frame_indexs()
-        for name in names:
-            if name not in part_names + reference_frame_names:
-                raise Exception(f"Fail to locate a joint or reference frame named {name}")
-            self.inverse_kinematic_analysis_basis.append(name)
-    
-    def retrieve_part_indexs(self) -> list:
+    def retrieve_part_index_list(self) -> list:
         index_list = self.parts["index"].tolist()
         return index_list
     
-    def retrieve_reference_frame_indexs(self) -> list:
+    def retrieve_reference_frame_index_list(self) -> list:
         index_list = self.reference_frames["index"].tolist()
         return index_list
     
-    def retrieve_joint_control_variables(self) -> list:
+    def retrieve_control_variable_list(self) -> list:
         control_variable_list = []
         for _, part in self.parts.iterrows():
             if part["entity"].type in [PartTypes.ROTATIONAL_JOINT]:
                 control_variable_list.append(part["entity"].control_variable)
         return control_variable_list
     
-    def retrive_control_variables_num(self) -> int:
-        control_variables_num = 0
+    def retrive_control_variable_num(self) -> int:
+        control_variable_num = 0
         for _, part in self.parts.iterrows():
             if part["entity"].type in [PartTypes.ROTATIONAL_JOINT]:
-                control_variables_num += 1
-        return control_variables_num
+                control_variable_num += 1
+        return control_variable_num
     
-    def retrive_control_variables(self) -> list:
-        control_variables_list = []
+    def retrive_control_variable_list(self) -> list:
+        control_variable_list = []
         for _, part in self.parts.iterrows():
             if part["entity"].type in [PartTypes.ROTATIONAL_JOINT]:
-                control_variables_list.append(part["entity"].control_variable)
-        return control_variables_list
+                control_variable_list.append(part["entity"].control_variable)
+        return control_variable_list
     
     def update_pose_matrix(self,
                            pose_matrixs:dict) -> None:
-        part_names = self.retrieve_part_indexs()
-        reference_frame_names = self.retrieve_reference_frame_indexs()
+        part_names = self.retrieve_part_index_list()
+        reference_frame_names = self.retrieve_reference_frame_index_list()
         for name, pose_matrix in pose_matrixs.items():
             if name in part_names:
                 mask = self.parts["index"] == name

@@ -22,6 +22,8 @@ import os
 from dk.logger.log4p import Log4P
 from utils.kinematic_utils import KinematicUtils
 from enums.part_types import PartTypes
+from kinematics.kinematic_computer import KinematicComputer
+from typing import Self
 
 class SimulationController(BaseController):
     
@@ -33,12 +35,29 @@ class SimulationController(BaseController):
     def control_object(self) -> RoboticArm:
         return self._control_object
     
+    def initialize(self) -> Self:
+        self.control_object.initialize()
+        initial_control_variables = self.control_object.retrive_control_variable_list()
+        self.standard_input(initial_control_variables)
+        return self
+    
     def standard_input(self,
-              control_variable_list:list) -> None:
-        self.control_object.standard_input(control_variable_list)
+                       control_variable_list:list) -> None:
+        kinematic_computer = KinematicComputer()
+        pose_matrixs_dict = kinematic_computer.calculate_pose_matrixs(self.control_object,
+                                                                      control_variable_list)
+        self.control_object.update_control_variable(control_variable_list)
+        self.control_object.update_pose_matrix(pose_matrixs_dict)
+        
+    def delta_input(self,
+                    delta_control_variable_list:list) -> None:
+        current_control_variable_list = self.standard_output()
+        control_variable_list = [current + delta for current, delta in zip(current_control_variable_list, delta_control_variable_list)]
+        self.standard_input(control_variable_list)
+        
     
     def standard_output(self) -> list:
-        control_variable_list = self.control_object.standard_output()
+        control_variable_list = self.control_object.retrieve_control_variable_list()
         return control_variable_list
     
     def listen(self,
@@ -93,3 +112,21 @@ class SimulationController(BaseController):
                     pass
             logger.info(f"------------------------------------------------")
         logger.info(f"===========================================================")
+        
+    def enable_inverse_kinematic(self,
+                                 names: list) -> None:
+        """Specify reference systems or components to participate in inverse kinematics analysis. This function is recommended to be called after the entire robotic arm has been constructed (using Configuration.confirm_construct()).
+    
+        Args:
+            names (np.typing.NDArray): The names of the reference system or component that needs to participate in the inverse kinematics analysis.
+    
+        Returns:
+            None.
+        """
+        
+        part_names = self.control_object.retrieve_part_index_list()
+        reference_frame_names = self.control_object.retrieve_reference_frame_index_list()
+        for name in names:
+            if name not in part_names + reference_frame_names:
+                raise Exception(f"Fail to locate a joint or reference frame named {name}")
+            self.control_object.inverse_kinematic_analysis_basis.append(name)

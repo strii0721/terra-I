@@ -28,15 +28,6 @@ class Assembly(ABC):
         pass
     
     @abstractmethod
-    def standard_input(self,
-                       control_variable:list) -> None:
-        pass
-    
-    @abstractmethod
-    def standard_output(self) -> list:
-        pass
-    
-    @abstractmethod
     def retrieve_render_list(self,
                              render_object_type:RenderObjectTypes) -> list:
         pass

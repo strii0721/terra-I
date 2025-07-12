@@ -30,13 +30,6 @@ class Hull(Assembly):
     def parts(self) -> pd.DataFrame:
         return self._parts
     
-    def standard_input(self,
-                       control_variable:list) -> None:
-        pass
-    
-    def standard_output(self) -> list:
-        return []
-    
     def retrieve_render_list(self,
                              render_object_type:RenderObjectTypes) -> list:
         match render_object_type:

@@ -36,9 +36,10 @@ left_arm.construct(Link("link_0-0", np.array([5.1, 0, 0])))\
     .construct(Link("link_2-0", np.array([0, 0, -19.45])))\
     .construct(Link("link_2-1", np.array([269.91, 0, 0])))\
     .construct(Link("link_2-2", np.array([0, 22.8, 0])))\
-    .construct(RotationalJoint("la-j3", np.array([0, 1, 0])))\
-    .construct(Link("link_3-0", np.array([250, 0, 0])))\
-    .confirm_construct()
+    .construct(RotationalJoint("la-j3", np.array([0, 1, 0]), initial_control_variable = -pi))\
+    .construct(Link("link_3-0", np.array([250, 0, 0])))
+    
+controller = SimulationController(left_arm).initialize()
 inverse_kinematic_analysis_basis = ["_rf-1",
                                     "_rf-2",
                                     "_rf-3",
@@ -47,16 +48,16 @@ listem_to = ["la-j1",
              "la-j2",
              "la-j3",
              "link_3-0"]
-left_arm.enable_inverse_kinematic(inverse_kinematic_analysis_basis)
+controller.enable_inverse_kinematic(inverse_kinematic_analysis_basis)
 renderer = Renderer()
 hull = Hull()
-controller = SimulationController(left_arm)
+
 
 for suffix in range(1000):
     renderer.clean_lines()
     renderer.clean_faces()
-    control_variables = [0, pi/1000 * suffix, -pi/1000 * suffix]
-    controller.standard_input(control_variables)
+    delta_control_variable_list = [0, pi/1000, pi/1000]
+    controller.delta_input(delta_control_variable_list)
     controller.listen(listem_to)
     
     renderer.add_lines(left_arm.retrieve_render_list(RenderObjectTypes.LINE))

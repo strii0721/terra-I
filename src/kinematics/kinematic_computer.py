@@ -80,7 +80,7 @@ class KinematicComputer:
             None.
         """
         
-        if len(control_variables) != control_object.retrive_control_variables_num():
+        if len(control_variables) != control_object.retrive_control_variable_num():
             raise Exception("The number of input signals does not match the number of joints...")
         control_variables_enum = enumerate(control_variables)
         last_control_variable = 0.0
@@ -120,13 +120,13 @@ class KinematicComputer:
             dict: Position-orientation matrix of each joints and reference frame.
         """
         
-        if len(control_variables) != control_object.retrive_control_variables_num():
+        if len(control_variables) != control_object.retrive_control_variable_num():
             raise Exception("The number of input signals does not match the number of joints...")
         dh_table = self.calculate_dh_table(control_object,
                                            control_variables)
         compensate_transformation_matrixs_dict = self.calculate_compensation_transformation_matrix(control_object,
                                                                                                    control_variables)
-        names = control_object.retrieve_reference_frame_indexs()
+        names = control_object.retrieve_reference_frame_index_list()
         reference_frame_pose_matrixs = self.cascade_forward_kinematics(dh_table = dh_table,
                                                                        names = names)
         reference_frame_pose_matrixs_enum = enumerate(reference_frame_pose_matrixs.items())

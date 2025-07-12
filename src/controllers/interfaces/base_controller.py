@@ -27,6 +27,10 @@ class BaseController(ABC):
         pass
     
     @abstractmethod
+    def initialize(self) -> None:
+        pass
+    
+    @abstractmethod
     def standard_input(self,
                        control_variable_list:list) -> None:
         pass
