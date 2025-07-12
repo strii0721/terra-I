@@ -25,6 +25,7 @@ from enums.part_types import PartTypes
 from typing import Self
 import numpy as np
 import time
+from typing import Callable
 
 class SimulationController(BaseController):
     
@@ -59,6 +60,12 @@ class SimulationController(BaseController):
             self.standard_input(control_variable_list)
             time.sleep(self.control_interval)
         
+    def target_input(self,
+                     target_pose_matrix_list:list,
+                     trajectory_generate_function:Callable) -> None:
+        for target_pose_matrix in target_pose_matrix_list:
+            trajectory = trajectory_generate_function(self.control_object, target_pose_matrix)
+            self.trajectory_input(trajectory)
     
     def standard_output(self) -> list:
         control_variable_list = self.control_object.retrieve_control_variable_list()
@@ -102,7 +109,7 @@ class SimulationController(BaseController):
             entity = objects[name][0]
             po_matix = objects[name][1]
             x, y, z = KinematicUtils.calculate_position_from_po_matrix(po_matix)
-            x_vector, y_vector, z_vector = KinematicUtils.calculate_orientation_from_po_matrix(po_matix)
+            x_vector, y_vector, z_vector = KinematicUtils.calculate_orientation_from_pose_matrix(po_matix)
             logger.info(f"Name: {name}")
             logger.info(f"Position: x = {x:.6f}    y = {y:.6f}    z = {z:.6f}")
             logger.info(f"Orientation:")
@@ -117,8 +124,63 @@ class SimulationController(BaseController):
             logger.info(f"------------------------------------------------")
         logger.info(f"===========================================================")
         
+    def listen_daemon(self,
+                      listened_object_names:list) -> None:
+        """Listen to pose information of a given object and print it in the terminal.
+    
+        Args:
+            track_objects (list): Name list of objects that need to track.
+    
+        Returns:
+            None.
+        """
+        
+        logger = Log4P()
+        while True:
+            objects = {
+                name: (entity, po_matrix)
+                for name, entity, po_matrix in zip(
+                    self.control_object.parts["index"],
+                    self.control_object.parts["entity"],
+                    self.control_object.parts["pose_matrix"])
+            }
+
+            objects = objects | {
+                name: (entity, po_matrix)
+                for name, entity, po_matrix in zip(
+                    self.control_object.reference_frames["index"],
+                    self.control_object.reference_frames["entity"],
+                    self.control_object.reference_frames["pose_matrix"])
+            }
+        
+            os.system('cls' if os.name == 'nt' else 'clear')
+            logger.info(f"      ==   Kinematic Simulation System  ==", True)
+            logger.info(f"", True)
+            logger.info(f"Author: strii0721       SING PRAISE TO THE GOD OF ALL MACHINES!", True)
+            logger.info(f"", True)
+            logger.info(f"===========================================================", True)
+            for name in listened_object_names:
+                entity = objects[name][0]
+                pose_matix = objects[name][1]
+                x, y, z = KinematicUtils.calculate_position_from_po_matrix(pose_matix)
+                x_vector, y_vector, z_vector = KinematicUtils.calculate_orientation_from_pose_matrix(pose_matix)
+                logger.info(f"Name: {name}", True)
+                logger.info(f"Position: x = {x:.6f}    y = {y:.6f}    z = {z:.6f}", True)
+                logger.info(f"Orientation:", True)
+                logger.info(f" - X-Axis: {np.round(x_vector, decimals=6)}", True)
+                logger.info(f" - Y-Axis: {np.round(y_vector, decimals=6)}", True)
+                logger.info(f" - Z-Axis: {np.round(z_vector, decimals=6)}", True)
+                match entity.type:
+                    case PartTypes.ROTATIONAL_JOINT:
+                        logger.info(f"Current Output: {entity.control_variable}")
+                    case _:
+                        pass
+                logger.info(f"------------------------------------------------", True)
+            logger.info(f"===========================================================")
+            time.sleep(self.control_interval)
+        
     def bind_inverse_kinematic_analysis_basis(self,
-                                 names: list) -> None:
+                                 names: list) -> Self:
         """Specify reference systems or components to participate in inverse kinematics analysis. This function is recommended to be called after the entire robotic arm has been constructed (using Configuration.confirm_construct()).
     
         Args:
@@ -134,3 +196,5 @@ class SimulationController(BaseController):
             if name not in part_names + reference_frame_names:
                 raise Exception(f"Fail to locate a joint or reference frame named {name}")
             self.control_object.inverse_kinematic_analysis_basis.append(name)
+            
+        return self

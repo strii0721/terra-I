@@ -174,7 +174,7 @@ class KinematicUtils:
         return (x, y, z)
     
     @staticmethod
-    def calculate_orientation_from_po_matrix(po_matrix:np.typing.NDArray) -> tuple:
+    def calculate_orientation_from_pose_matrix(po_matrix:np.typing.NDArray) -> tuple:
         """Calculate orientation from a given position-orientation matix.
     
         Args:

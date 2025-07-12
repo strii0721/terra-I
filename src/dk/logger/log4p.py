@@ -25,26 +25,34 @@ class Log4P:
                  log_file_path = "logs/log4p.log") -> None:
         
         self.log_file_path = log_file_path
+        self.cache = ""
         
     
     def _log(self, 
              level:LL, 
-             message:str) -> None:
+             message:str,
+             hold) -> None:
         
         timestamp = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
         log_string = ""
         log_string += f"[{timestamp}] "
         log_string += f"[{level.value}] "
         log_string += f"{message}"
-        
-        os.makedirs(os.path.dirname(self.log_file_path), exist_ok=True)
-        print(log_string)
-        with open(self.log_file_path, "a") as f:
-            f.write(log_string)
-            f.write("\n")
+        if hold:
+            self.cache += log_string + "\n"
+        else:
+            os.makedirs(os.path.dirname(self.log_file_path), exist_ok=True)
+            self.cache += log_string
+            print(self.cache)
+            # with open(self.log_file_path, "a") as f:
+            #     f.write(self.cache)
+            #     f.write("\n")
+            self.cache = ""
     
     def info(self, 
-             message:str) -> None:
+             message:str,
+             hold = False) -> None:
         self._log(LL.INFO,
-                  message)
+                  message,
+                  hold)
         
