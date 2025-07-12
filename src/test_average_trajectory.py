@@ -25,8 +25,10 @@ from models.hull import Hull
 from math import pi
 from controllers.simulation_controller import SimulationController
 from utils.kinematic_utils import KinematicUtils
+from threading import Thread
 import time
-from dk.logger.log4p import Log4P
+from enums.render_object_types import RenderObjectTypes
+
 
 CONTROL_INTERVAL = 0.1
 RENDER_INTERVAL = 0.1
@@ -51,15 +53,30 @@ inverse_kinematic_analysis_basis = ["_rf-1",
                                     "link_3-0"]
 
 controller.bind_inverse_kinematic_analysis_basis(inverse_kinematic_analysis_basis)
-target_control_variable_list = [0, 0, -1*pi/4]
+target_control_variable_list = [-pi/2, 0, 0]
 target_pose_matrix = KinematicUtils.calculate_pose_matrix_dict(left_arm,
                                                                target_control_variable_list)["link_3-0"]
-start = time.time()
-calculated_result = KinematicUtils.inverse_kinematics(left_arm,
-                                                      target_pose_matrix,
-                                                      learning_rate = 0.2,
-                                                      enable_log = False)
-end = time.time()
-logger = Log4P()
-logger.info(f"Calculation time: {end-start:.6f} sec")
-logger.info(f"Target control variables: {calculated_result}")
+
+
+trajectory = KinematicUtils.average_trajactory_plan(left_arm,
+                                                    target_pose_matrix)
+listem_to = ["la-j1",
+             "la-j2",
+             "la-j3",
+             "link_3-0"]
+renderer = Renderer()
+thread_controller = Thread(target = controller.trajectory_input, args=(trajectory,))
+
+thread_controller.start()
+
+while True:
+    controller.listen(listem_to)
+    
+    renderer.clean_lines()
+    renderer.clean_faces()
+    
+    renderer.add_lines(left_arm.retrieve_render_list(RenderObjectTypes.LINE))
+    renderer.add_faces(hull.retrieve_render_list(RenderObjectTypes.FACE))
+    renderer.render()
+    
+    

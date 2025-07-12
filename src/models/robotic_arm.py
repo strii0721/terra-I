@@ -23,6 +23,7 @@ from enums.render_object_types import RenderObjectTypes
 from utils.data_frame_utils import DataFrameUtils
 from enums.part_types import PartTypes
 from models.reference_frame import ReferenceFrame
+from typing import Self
 
 class RoboticArm(Assembly, KinematicComputing):
     
@@ -62,7 +63,7 @@ class RoboticArm(Assembly, KinematicComputing):
         return render_list
     
     def construct(self, 
-                  part):
+                  part) -> Self:
         """Assemble a robotic arm model using Joint and Link.
     
         Args:

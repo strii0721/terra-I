@@ -333,11 +333,10 @@ class KinematicUtils:
     @staticmethod
     def inverse_kinematics(control_object:ComputableAssembly,
                            target_pose_matrix:np.typing.NDArray, 
-                           current_control_variable_list:list, 
-                           max_iteration:int = 10000, 
+                           max_iteration:int = 500, 
                            shreshold:float = 1e-3, 
                            learning_rate:float = 0.1,
-                           enable_log = False):
+                           enable_log = False) -> list:
         """Perform forward kinematic analysis.
     
         Args:
@@ -352,6 +351,7 @@ class KinematicUtils:
             list: An input sequence that can let end of robotic arm reach a given position and orientation.
         """
         logger = Log4P()
+        current_control_variable_list = control_object.retrieve_control_variable_list()
         for i in range(max_iteration):
             pose_matrixs_dict = KinematicUtils.calculate_pose_matrix_dict(control_object,
                                                                           current_control_variable_list)
@@ -371,8 +371,31 @@ class KinematicUtils:
             current_control_variable_list = new_control_variables.tolist()
         raise RuntimeError("Inverse Kinematic Analysis Failed...")
     
-    def calculate_trajactory(self,
-                             current_pose_matrix:np.typing.NDArray,
-                             target_pose_matrix:np.typing.NDArray,
-                             steps:50):
-        pass
+    @staticmethod
+    def check_reachable(control_object:ComputableAssembly,
+                        target_pose_matrix:np.typing.NDArray) -> tuple:
+        try:
+            target_control_variable_list = KinematicUtils.inverse_kinematics(control_object,
+                                                                             target_pose_matrix)
+            return True, target_control_variable_list
+        except Exception as e:
+            return False, str(e)
+    
+    @staticmethod
+    def average_trajactory_plan(control_object:ComputableAssembly,
+                                target_pose_matrix:np.typing.NDArray,
+                                step_num:int = 50) -> list:
+        is_recachable, result = KinematicUtils.check_reachable(control_object,
+                                                               target_pose_matrix)
+        if is_recachable:
+            start_control_variable_list = control_object.retrieve_control_variable_list()
+            end_control_variable_list = result
+            trajectory = []
+            delta_control_variables_list = [end - start for end, start in zip(end_control_variable_list, start_control_variable_list)]
+            delta_control_variables_list = [delta / step_num for delta in delta_control_variables_list]
+            for i in range(step_num):
+                start_control_variable_list = [current + delta for current, delta in zip(start_control_variable_list, delta_control_variables_list)]
+                trajectory.append(start_control_variable_list)
+            return trajectory
+        else:
+            raise Exception("Target pose is not reachable!")

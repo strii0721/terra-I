@@ -24,6 +24,7 @@ from utils.kinematic_utils import KinematicUtils
 from enums.part_types import PartTypes
 from typing import Self
 import numpy as np
+import time
 
 class SimulationController(BaseController):
     
@@ -51,6 +52,12 @@ class SimulationController(BaseController):
         current_control_variable_list = self.standard_output()
         control_variable_list = [current + delta for current, delta in zip(current_control_variable_list, delta_control_variable_list)]
         self.standard_input(control_variable_list)
+        
+    def trajectory_input(self,
+                         trajectory:list) -> None:
+        for control_variable_list in trajectory:
+            self.standard_input(control_variable_list)
+            time.sleep(self.control_interval)
         
     
     def standard_output(self) -> list:

@@ -19,6 +19,7 @@
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+import time
 
 class Renderer:
     
@@ -66,7 +67,7 @@ class Renderer:
         self.ax.set_box_aspect([x_max - x_min,
                                 y_max - y_min,
                                 z_max - z_min])
-        self.ax.set_xticks([])  # 可选，先清空自动刻度
+        self.ax.set_xticks([])
         self.ax.xaxis.set_major_locator(MultipleLocator(50))
         self.ax.yaxis.set_major_locator(MultipleLocator(50))
         self.ax.zaxis.set_major_locator(MultipleLocator(50))

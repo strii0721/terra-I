@@ -30,3 +30,6 @@ class KinematicComputing(Protocol):
     
     def retrieve_reference_frame_index_list(self) -> list:
         pass
+    
+    def retrieve_control_variable_list(self) -> list:
+        pass
