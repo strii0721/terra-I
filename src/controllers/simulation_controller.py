@@ -60,11 +60,8 @@ class SimulationController(BaseController):
     def trajectory_input(self,
                          trajectory:list) -> None:
         for control_variable_list in trajectory:
-            if self.validate_input(control_variable_list):
-                self.standard_input(control_variable_list)
-                time.sleep(self.control_interval)
-            else:
-                raise Exception("Exceeding angle restrictions...")
+            self.standard_input(control_variable_list)
+            time.sleep(self.control_interval)        
         
     def target_input(self,
                      target_pose_matrix_list:list,
@@ -87,6 +84,8 @@ class SimulationController(BaseController):
                                                               target_pose_matrix, 
                                                               mode = mode,
                                                               enable_log = enable_log)
+                    if not self.validate_trajectory(trajectory):
+                        raise Exception("Exceeding angle restrictions...")
                     logger.info(f"Moving to target...")
                     reachable = True
                     self.trajectory_input(trajectory)
@@ -263,9 +262,14 @@ class SimulationController(BaseController):
             
         return self
     
+    def validate_trajectory(self,
+                            trajectory:list) -> bool:
+        for control_variable_list in trajectory:
+            valid_input = self.validate_input(control_variable_list)
+            if not valid_input:
+                return False
+        return True
+    
     def validate_input(self,
-                       control_variable:list) -> bool:
-        joint_0 = control_variable[0]
-        left = joint_0 > -pi/2 - 1e-1 and joint_0 < 0 + 1e-1
-        right = joint_0 > pi/2 - 1e-1 and joint_0 < pi + 1e-1
+                       control_variable_list:list):
         return True

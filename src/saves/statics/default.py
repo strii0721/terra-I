@@ -53,7 +53,7 @@ R_LISTEN_LIST = [
     "r-link_3-0"
 ]
 HULL = Hull()
-TARGET = TargetPoint((200,200,400))
+TARGET = TargetPoint((160,140,470))
 LEFT_ARM = RoboticArm()\
     .construct(Link("l-link_0-0", np.array([5.1, 0, 0])))\
     .construct(Link("l-link_0-1", np.array([0, 5.3, 0])))\

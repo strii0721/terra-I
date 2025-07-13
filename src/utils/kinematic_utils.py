@@ -346,7 +346,7 @@ class KinematicUtils:
     def inverse_kinematics(control_object:ComputableAssembly,
                            target_pose_matrix:np.typing.NDArray, 
                            mode:str = "full",
-                           max_iteration:int = 500, 
+                           max_iteration:int = 400, 
                            shreshold:float = 1e-3, 
                            learning_rate:float = 0.2,
                            enable_log = False) -> list:
