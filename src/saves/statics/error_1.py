@@ -55,14 +55,14 @@ HULL = Hull()
 LEFT_ARM = RoboticArm()\
     .construct(Link("l-link_0-0", np.array([5.1, 0, 0])))\
     .construct(Link("l-link_0-1", np.array([0, 5.3, 0])))\
-    .construct(RotationalJoint("la-j1", np.array([0, 1, 0]), initial_control_variable = 0))\
+    .construct(RotationalJoint("la-j1", np.array([0, 1, 0]), initial_control_variable = -1.5700512994992781))\
     .construct(Link("l-link_1-0", np.array([30.891, 0, 0])))\
     .construct(Link("l-link_1-1", np.array([0, -19.45, 0])))\
-    .construct(RotationalJoint("la-j2", np.array([0, -1, 0]), initial_control_variable = 0))\
+    .construct(RotationalJoint("la-j2", np.array([0, -1, 0]), initial_control_variable = 4.226378871563964e-08))\
     .construct(Link("l-link_2-0", np.array([0, 0, -19.45])))\
     .construct(Link("l-link_2-1", np.array([269.91, 0, 0])))\
     .construct(Link("l-link_2-2", np.array([0, 22.8, 0])))\
-    .construct(RotationalJoint("la-j3", np.array([0, 1, 0]), initial_control_variable = pi))\
+    .construct(RotationalJoint("la-j3", np.array([0, 1, 0]), initial_control_variable = -0.0016424595463087194))\
     .construct(Link("l-link_3-0", np.array([250, 0, 0])))
 L_CONTROLLER = SimulationController(LEFT_ARM, control_interval = CONTROL_INTERVAL)\
     .initialize()\

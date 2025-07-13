@@ -65,7 +65,7 @@ class SpatialUtils:
             return angle_rad
     
     @staticmethod
-    def normalize_angle(angle):
+    def normalize_angle(angle:float) -> float:
         """Normalize angle in a range of [-pi, pi]
 
         Args:
@@ -80,3 +80,16 @@ class SpatialUtils:
             if angle > pi:
                 angle -= 2*pi
         return angle
+    
+    @staticmethod
+    def normalize_angle_list(angle_list:list) -> list:
+        """Normalize angle in a range of [-pi, pi]
+
+        Args:
+            angle (float): original angle
+
+        Returns:
+            float: angle after normalization
+        """        
+        
+        return [SpatialUtils.normalize_angle(angle) for angle in angle_list]

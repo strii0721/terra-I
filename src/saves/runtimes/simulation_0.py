@@ -24,7 +24,7 @@ from utils.kinematic_utils import KinematicUtils
 from math import pi
 
 '''
-This runtime is using "average trajactory plan"
+This runtime is using "Linear Joint Interpolation"
 This simulation demonstrates the initialisation process of the robotic arm.
 '''
 
@@ -37,9 +37,9 @@ LEFT_ACTION_1 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [-pi/2, 
 l_target_pose_matrix_list = [
     LEFT_STOP_0, 
     LEFT_STOP_1, 
-    # LEFT_STOP_2, 
-    # LEFT_STOP_3, 
-    # LEFT_ACTION_1
+    LEFT_STOP_2, 
+    LEFT_STOP_3, 
+    LEFT_ACTION_1
 ]
 RIGHT_STOP_0 = KinematicUtils.calculate_pose_matrix_dict(CFG.RIGHT_ARM, [pi, 0, pi])["r-link_3-0"]
 RIGHT_STOP_1 = KinematicUtils.calculate_pose_matrix_dict(CFG.RIGHT_ARM, [pi/2, 0, pi])["r-link_3-0"]
@@ -50,16 +50,16 @@ r_target_pose_matrix_list = [
     RIGHT_STOP_0, 
     RIGHT_STOP_0, 
     RIGHT_STOP_1, 
-    # RIGHT_STOP_2, 
-    # RIGHT_STOP_3, 
-    # RIGHT_ACTION_1
+    RIGHT_STOP_2, 
+    RIGHT_STOP_3, 
+    RIGHT_ACTION_1
 ]
 #########################################################################
 
   
 # Exports ###############################################################
 THREAD_LIST = [
-    Thread(target = CFG.L_CONTROLLER.listen_daemon, args = (CFG.L_LISTEN_LIST,)),
+    # Thread(target = CFG.L_CONTROLLER.listen_daemon, args = (CFG.L_LISTEN_LIST,)),
     # Thread(target = CFG.R_CONTROLLER.listen_daemon, args = (CFG.R_LISTEN_LIST,)),
     Thread(target = CFG.L_CONTROLLER.target_input, args = (l_target_pose_matrix_list,
                                                            KinematicUtils.tp_linear_joint_interpolation)),

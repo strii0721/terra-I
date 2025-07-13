@@ -26,6 +26,7 @@ from typing import Self
 import numpy as np
 import time
 from typing import Callable
+from utils.spatial_utils import SpatialUtils
 
 class SimulationController(BaseController):
     
@@ -43,9 +44,10 @@ class SimulationController(BaseController):
     
     def standard_input(self,
                        control_variable_list:list) -> None:
+        normalized_control_variable_list = SpatialUtils.normalize_angle_list(control_variable_list)
         pose_matrixs_dict = KinematicUtils.calculate_pose_matrix_dict(self.control_object,
-                                                                      control_variable_list)
-        self.control_object.update_control_variable(control_variable_list)
+                                                                      normalized_control_variable_list)
+        self.control_object.update_control_variable(normalized_control_variable_list)
         self.control_object.update_pose_matrix(pose_matrixs_dict)
         
     def delta_input(self,

@@ -335,7 +335,7 @@ class KinematicUtils:
                            target_pose_matrix:np.typing.NDArray, 
                            max_iteration:int = 500, 
                            shreshold:float = 1e-3, 
-                           learning_rate:float = 0.1,
+                           learning_rate:float = 0.2,
                            enable_log = False) -> list:
         """Perform forward kinematic analysis.
     
@@ -353,27 +353,33 @@ class KinematicUtils:
         logger = Log4P()
         currrent_control_variable_list = control_object.retrieve_control_variable_list()
         target_control_variable_list = currrent_control_variable_list
+        normalized_pose_error_history = []
         for i in range(max_iteration):
             pose_matrixs_dict = KinematicUtils.calculate_pose_matrix_dict(control_object,
                                                                           target_control_variable_list)
             current_pose_matrix = list(pose_matrixs_dict.values())[-1]
-            po_error = KinematicUtils.calculate_pose_error(target_pose_matrix, current_pose_matrix)
+            pose_error = KinematicUtils.calculate_pose_error(target_pose_matrix, current_pose_matrix)
+            normalized_pose_error_history.append(np.linalg.norm(pose_error))
             if enable_log:
-                logger.info(f"[{i}] error norm = {np.linalg.norm(po_error):.6f}, current_control_variables = {target_control_variable_list}")
-            if np.linalg.norm(po_error) < shreshold:
+                logger.info(f"[{i}] error norm = {np.linalg.norm(pose_error):.6f}, current_control_variables = {target_control_variable_list}")
+            if np.linalg.norm(pose_error) < shreshold:
                 delta_control_variable_list = [
                     target_control_variable - current_control_variable for target_control_variable, current_control_variable in zip(target_control_variable_list, currrent_control_variable_list)
                 ]
-                delta_control_variable_list = [SpatialUtils.normalize_angle(delta_control_variable) for delta_control_variable in delta_control_variable_list]
+                delta_control_variable_list = SpatialUtils.normalize_angle_list(delta_control_variable_list)
                 return [current_control_variable + delta_control_variable for current_control_variable, delta_control_variable in zip(currrent_control_variable_list, delta_control_variable_list)]
             basis_names = control_object.inverse_kinematic_analysis_basis
             basis_pose_matrixs = []
             for name in basis_names:
                 basis_pose_matrixs.append(pose_matrixs_dict[name])
             J = KinematicUtils.calculate_jacobian_matrix(basis_pose_matrixs)
-            delta_control_variable_vector = learning_rate * np.linalg.pinv(J) @ po_error
+            delta_control_variable_vector = learning_rate * np.linalg.pinv(J) @ pose_error
             new_control_variable_vector = np.array(target_control_variable_list) + delta_control_variable_vector
             target_control_variable_list = new_control_variable_vector.tolist()
+            if len(normalized_pose_error_history) > max_iteration/2:
+                if normalized_pose_error_history[-max_iteration//2] - normalized_pose_error_history[-1]  < 0.1 * normalized_pose_error_history[-1]:
+                    target_control_variable_list = [-control_variable for control_variable in currrent_control_variable_list]
+                    normalized_pose_error_history = []
         raise RuntimeError("Inverse Kinematic Analysis Failed...")
     
     @staticmethod
@@ -381,7 +387,8 @@ class KinematicUtils:
                         target_pose_matrix:np.typing.NDArray) -> tuple:
         try:
             target_control_variable_list = KinematicUtils.inverse_kinematics(control_object,
-                                                                             target_pose_matrix)
+                                                                             target_pose_matrix,
+                                                                             enable_log= True)
             return True, target_control_variable_list
         except Exception as e:
             return False, str(e)
@@ -403,4 +410,4 @@ class KinematicUtils:
                 trajectory.append(start_control_variable_list)
             return trajectory
         else:
-            raise Exception("Target pose is not reachable!")
+            raise Exception(result)

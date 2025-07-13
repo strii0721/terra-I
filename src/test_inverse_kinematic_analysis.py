@@ -20,13 +20,13 @@ from math import pi
 from utils.kinematic_utils import KinematicUtils
 import time
 from dk.logger.log4p import Log4P
-import saves.statics.default as CFG
+import saves.statics.error_1 as CFG
 
-target_control_variable_list = [pi/2, 0, pi]
-target_pose_matrix = KinematicUtils.calculate_pose_matrix_dict(CFG.RIGHT_ARM,
-                                                               target_control_variable_list)["r-link_3-0"]
+target_control_variable_list = [-pi/2, 0, pi/2]
+target_pose_matrix = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM,
+                                                               target_control_variable_list)["l-link_3-0"]
 start = time.time()
-calculated_result = KinematicUtils.inverse_kinematics(CFG.RIGHT_ARM,
+calculated_result = KinematicUtils.inverse_kinematics(CFG.LEFT_ARM,
                                                       target_pose_matrix,
                                                       learning_rate = 0.2,
                                                       shreshold = 1e-6,
