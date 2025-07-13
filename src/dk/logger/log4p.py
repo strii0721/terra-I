@@ -44,9 +44,9 @@ class Log4P:
             os.makedirs(os.path.dirname(self.log_file_path), exist_ok=True)
             self.cache += log_string
             print(self.cache)
-            # with open(self.log_file_path, "a") as f:
-            #     f.write(self.cache)
-            #     f.write("\n")
+            with open(self.log_file_path, "a") as f:
+                f.write(self.cache)
+                f.write("\n")
             self.cache = ""
     
     def info(self, 

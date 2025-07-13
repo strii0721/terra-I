@@ -17,7 +17,7 @@
 #
 
 import numpy as np
-from math import sqrt
+from math import sqrt, pi
 
 class SpatialUtils:
     
@@ -63,3 +63,20 @@ class SpatialUtils:
             sign = np.sign(np.dot(cross_product, normal))
             angle_rad = np.arctan2(np.linalg.norm(cross_product) * sign, dot_product)
             return angle_rad
+    
+    @staticmethod
+    def normalize_angle(angle):
+        """Normalize angle in a range of [-pi, pi]
+
+        Args:
+            angle (float): original angle
+
+        Returns:
+            float: angle after normalization
+        """        
+        while angle < -pi or angle > pi:
+            if angle < -pi:
+                angle += 2*pi
+            if angle > pi:
+                angle -= 2*pi
+        return angle

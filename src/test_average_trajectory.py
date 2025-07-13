@@ -58,7 +58,7 @@ target_pose_matrix = KinematicUtils.calculate_pose_matrix_dict(left_arm,
                                                                target_control_variable_list)["link_3-0"]
 
 
-trajectory = KinematicUtils.average_trajactory_plan(left_arm,
+trajectory = KinematicUtils.tp_linear_joint_interpolation(left_arm,
                                                     target_pose_matrix)
 listem_to = ["la-j1",
              "la-j2",

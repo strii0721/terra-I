@@ -25,32 +25,54 @@ from math import pi
 
 '''
 This runtime is using "average trajactory plan"
+This simulation demonstrates the initialisation process of the robotic arm.
 '''
 
 # Variable Area #########################################################
-# target_pose_matrix_list = []
-# target_control_variable_lists = [
-#     [-pi/2, 0, -pi],
-#     [-pi/2, pi/4, -pi],
-#     [-pi/2, pi/4, 1e-1],
-# ]
-# for target_control_variable_list in target_control_variable_lists:
-#     target_pose_matrix_list.append(KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM,
-#                                                                              target_control_variable_list)["link_3-0"])
+LEFT_STOP_0 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [0, 0, -pi])["l-link_3-0"]
+LEFT_STOP_1 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [-pi/2, 0, -pi])["l-link_3-0"]
+LEFT_STOP_2 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [-pi/2, 0, -pi/2])["l-link_3-0"]
+LEFT_STOP_3 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [-pi/2, 0, 0])["l-link_3-0"]
+LEFT_ACTION_1 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [-pi/2, 0, pi/2])["l-link_3-0"]
+l_target_pose_matrix_list = [
+    LEFT_STOP_0, 
+    LEFT_STOP_1, 
+    # LEFT_STOP_2, 
+    # LEFT_STOP_3, 
+    # LEFT_ACTION_1
+]
+RIGHT_STOP_0 = KinematicUtils.calculate_pose_matrix_dict(CFG.RIGHT_ARM, [pi, 0, pi])["r-link_3-0"]
+RIGHT_STOP_1 = KinematicUtils.calculate_pose_matrix_dict(CFG.RIGHT_ARM, [pi/2, 0, pi])["r-link_3-0"]
+RIGHT_STOP_2 = KinematicUtils.calculate_pose_matrix_dict(CFG.RIGHT_ARM, [pi/2, 0, 3*pi/2])["r-link_3-0"]
+RIGHT_STOP_3 = KinematicUtils.calculate_pose_matrix_dict(CFG.RIGHT_ARM, [pi/2, 0, 4*pi/2])["r-link_3-0"]
+RIGHT_ACTION_1 = KinematicUtils.calculate_pose_matrix_dict(CFG.RIGHT_ARM, [pi/2, 0, 5*pi/2])["r-link_3-0"]
+r_target_pose_matrix_list = [
+    RIGHT_STOP_0, 
+    RIGHT_STOP_0, 
+    RIGHT_STOP_1, 
+    # RIGHT_STOP_2, 
+    # RIGHT_STOP_3, 
+    # RIGHT_ACTION_1
+]
 #########################################################################
+
   
 # Exports ###############################################################
 THREAD_LIST = [
-    Thread(target = CFG.L_CONTROLLER.listen_daemon, args = (CFG.L_LISTEN_LIST,)),   
+    Thread(target = CFG.L_CONTROLLER.listen_daemon, args = (CFG.L_LISTEN_LIST,)),
     # Thread(target = CFG.R_CONTROLLER.listen_daemon, args = (CFG.R_LISTEN_LIST,)),
-    # Thread(target = CFG.CONTROLLER_L.target_input, args = (target_pose_matrix_list,
-    #                                                        KinematicUtils.average_trajactory_plan))
+    Thread(target = CFG.L_CONTROLLER.target_input, args = (l_target_pose_matrix_list,
+                                                           KinematicUtils.tp_linear_joint_interpolation)),
+    Thread(target = CFG.R_CONTROLLER.target_input, args = (r_target_pose_matrix_list,
+                                                           KinematicUtils.tp_linear_joint_interpolation))
 ]
 def FRAME():
     CFG.RENDERER.clean_lines()
     CFG.RENDERER.clean_faces()
+    
     CFG.RENDERER.add_faces(CFG.HULL.retrieve_render_list(RenderObjectTypes.FACE))
     CFG.RENDERER.add_lines(CFG.LEFT_ARM.retrieve_render_list(RenderObjectTypes.LINE))
     CFG.RENDERER.add_lines(CFG.RIGHT_ARM.retrieve_render_list(RenderObjectTypes.LINE))
+    
     CFG.RENDERER.render()
 ########################################################################

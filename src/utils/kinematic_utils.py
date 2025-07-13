@@ -351,24 +351,29 @@ class KinematicUtils:
             list: An input sequence that can let end of robotic arm reach a given position and orientation.
         """
         logger = Log4P()
-        current_control_variable_list = control_object.retrieve_control_variable_list()
+        currrent_control_variable_list = control_object.retrieve_control_variable_list()
+        target_control_variable_list = currrent_control_variable_list
         for i in range(max_iteration):
             pose_matrixs_dict = KinematicUtils.calculate_pose_matrix_dict(control_object,
-                                                                          current_control_variable_list)
+                                                                          target_control_variable_list)
             current_pose_matrix = list(pose_matrixs_dict.values())[-1]
             po_error = KinematicUtils.calculate_pose_error(target_pose_matrix, current_pose_matrix)
             if enable_log:
-                logger.info(f"[{i}] error norm = {np.linalg.norm(po_error):.6f}, current_control_variables = {current_control_variable_list}")
+                logger.info(f"[{i}] error norm = {np.linalg.norm(po_error):.6f}, current_control_variables = {target_control_variable_list}")
             if np.linalg.norm(po_error) < shreshold:
-                return current_control_variable_list
+                delta_control_variable_list = [
+                    target_control_variable - current_control_variable for target_control_variable, current_control_variable in zip(target_control_variable_list, currrent_control_variable_list)
+                ]
+                delta_control_variable_list = [SpatialUtils.normalize_angle(delta_control_variable) for delta_control_variable in delta_control_variable_list]
+                return [current_control_variable + delta_control_variable for current_control_variable, delta_control_variable in zip(currrent_control_variable_list, delta_control_variable_list)]
             basis_names = control_object.inverse_kinematic_analysis_basis
             basis_pose_matrixs = []
             for name in basis_names:
                 basis_pose_matrixs.append(pose_matrixs_dict[name])
             J = KinematicUtils.calculate_jacobian_matrix(basis_pose_matrixs)
-            delta_control_variables = learning_rate * np.linalg.pinv(J) @ po_error
-            new_control_variables = np.array(current_control_variable_list) + delta_control_variables
-            current_control_variable_list = new_control_variables.tolist()
+            delta_control_variable_vector = learning_rate * np.linalg.pinv(J) @ po_error
+            new_control_variable_vector = np.array(target_control_variable_list) + delta_control_variable_vector
+            target_control_variable_list = new_control_variable_vector.tolist()
         raise RuntimeError("Inverse Kinematic Analysis Failed...")
     
     @staticmethod
@@ -382,9 +387,9 @@ class KinematicUtils:
             return False, str(e)
     
     @staticmethod
-    def average_trajactory_plan(control_object:ComputableAssembly,
-                                target_pose_matrix:np.typing.NDArray,
-                                step_num:int = 50) -> list:
+    def tp_linear_joint_interpolation(control_object:ComputableAssembly,
+                                      target_pose_matrix:np.typing.NDArray,
+                                      step_num:int = 50) -> list:
         is_recachable, result = KinematicUtils.check_reachable(control_object,
                                                                target_pose_matrix)
         if is_recachable:
