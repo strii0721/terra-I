@@ -27,6 +27,7 @@ import numpy as np
 import time
 from typing import Callable
 from utils.spatial_utils import SpatialUtils
+from math import pi
 
 class SimulationController(BaseController):
     
@@ -59,15 +60,76 @@ class SimulationController(BaseController):
     def trajectory_input(self,
                          trajectory:list) -> None:
         for control_variable_list in trajectory:
-            self.standard_input(control_variable_list)
-            time.sleep(self.control_interval)
+            if self.validate_input(control_variable_list):
+                self.standard_input(control_variable_list)
+                time.sleep(self.control_interval)
+            else:
+                raise Exception("Exceeding angle restrictions...")
         
     def target_input(self,
                      target_pose_matrix_list:list,
-                     trajectory_generate_function:Callable) -> None:
+                     trajectory_generate_function:Callable,
+                     mode:str = "full",
+                     amap:bool = True,
+                     enable_log:bool = False) -> None:
+        retry_delay = 5
+        retry_portion = 0.7
+        logger = Log4P()
+        true_mode = mode
         for target_pose_matrix in target_pose_matrix_list:
-            trajectory = trajectory_generate_function(self.control_object, target_pose_matrix)
-            self.trajectory_input(trajectory)
+            true_target_pose_matrix = target_pose_matrix
+            reachable = False
+            substitute_position = False
+            retry_num = 0
+            while not reachable or substitute_position:
+                try:
+                    trajectory = trajectory_generate_function(self.control_object, 
+                                                              target_pose_matrix, 
+                                                              mode = mode,
+                                                              enable_log = enable_log)
+                    logger.info(f"Moving to target...")
+                    reachable = True
+                    self.trajectory_input(trajectory)
+                    logger.info(f"Movement completed....")
+                    if substitute_position: retry_num += 1
+                except Exception as e:
+                    logger.info(f"{e}")
+                finally:
+                    if not reachable:
+                        if amap:
+                            logger.info("Therefore, tring a closer position instead in positial mode...")
+                            substitute_position = True
+                            current_pose_matrix = list(KinematicUtils.calculate_pose_matrix_dict(
+                                self.control_object,
+                                self.standard_output()
+                            ).values())[-1]
+                            target_pose_matrix = KinematicUtils.generate_midway_pose_matrix(
+                                current_pose_matrix, target_pose_matrix, retry_portion
+                            )
+                            new_position = KinematicUtils.calculate_position_from_pose_matrix(target_pose_matrix)
+                            mode = "positional"
+                            logger.info(f"Replacement position confirmed {new_position}, retry in ")
+                            for i in range(retry_delay):
+                                logger.info(f"{retry_delay - i} s")
+                                time.sleep(1)
+                        else:
+                            logger.info("Therefore, retry in")
+                            for i in range(retry_delay):
+                                logger.info(f"{retry_delay - i} s")
+                                time.sleep(1)
+                                
+                    elif substitute_position:
+                        logger.info(f"Replacement position is reachable, let's try the true position again...")
+                        reachable = False
+                        substitute_position = False
+                        target_pose_matrix = true_target_pose_matrix
+                        mode = true_mode
+                        logger.info(f"Position confirmed, retry in ")
+                        for i in range(retry_delay):
+                            logger.info(f"{retry_delay - i} s")
+                            time.sleep(1)
+                        
+                    
     
     def standard_output(self) -> list:
         control_variable_list = self.control_object.retrieve_control_variable_list()
@@ -110,7 +172,7 @@ class SimulationController(BaseController):
         for name in listened_object_names:
             entity = objects[name][0]
             po_matix = objects[name][1]
-            x, y, z = KinematicUtils.calculate_position_from_po_matrix(po_matix)
+            x, y, z = KinematicUtils.calculate_position_from_pose_matrix(po_matix)
             x_vector, y_vector, z_vector = KinematicUtils.calculate_orientation_from_pose_matrix(po_matix)
             logger.info(f"Name: {name}")
             logger.info(f"Position: x = {x:.6f}    y = {y:.6f}    z = {z:.6f}")
@@ -164,7 +226,7 @@ class SimulationController(BaseController):
             for name in listened_object_names:
                 entity = objects[name][0]
                 pose_matix = objects[name][1]
-                x, y, z = KinematicUtils.calculate_position_from_po_matrix(pose_matix)
+                x, y, z = KinematicUtils.calculate_position_from_pose_matrix(pose_matix)
                 x_vector, y_vector, z_vector = KinematicUtils.calculate_orientation_from_pose_matrix(pose_matix)
                 logger.info(f"Name: {name}", True)
                 logger.info(f"Position: x = {x:.6f}    y = {y:.6f}    z = {z:.6f}", True)
@@ -200,3 +262,10 @@ class SimulationController(BaseController):
             self.control_object.inverse_kinematic_analysis_basis.append(name)
             
         return self
+    
+    def validate_input(self,
+                       control_variable:list) -> bool:
+        joint_0 = control_variable[0]
+        left = joint_0 > -pi/2 - 1e-1 and joint_0 < 0 + 1e-1
+        right = joint_0 > pi/2 - 1e-1 and joint_0 < pi + 1e-1
+        return True

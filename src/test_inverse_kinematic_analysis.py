@@ -21,16 +21,24 @@ from utils.kinematic_utils import KinematicUtils
 import time
 from dk.logger.log4p import Log4P
 import saves.statics.error_1 as CFG
+import numpy as np
 
 target_control_variable_list = [-pi/2, 0, pi/2]
 target_pose_matrix = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM,
                                                                target_control_variable_list)["l-link_3-0"]
+target_position_matrix = np.array([
+    [1, 0, 0, target_pose_matrix[0, 3]],
+    [0, 1, 0, target_pose_matrix[1, 3]],
+    [0, 0, 1, target_pose_matrix[2, 3]],
+    [0, 0, 0, 1]
+])
 start = time.time()
 calculated_result = KinematicUtils.inverse_kinematics(CFG.LEFT_ARM,
-                                                      target_pose_matrix,
+                                                      target_position_matrix,
                                                       learning_rate = 0.2,
                                                       shreshold = 1e-6,
-                                                      enable_log = True)
+                                                      enable_log = True,
+                                                      mode = "positional")
 end = time.time()
 logger = Log4P()
 logger.info(f"Calculation time: {end-start:.6f} sec")

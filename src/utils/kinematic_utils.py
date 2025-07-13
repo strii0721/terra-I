@@ -56,7 +56,8 @@ class KinematicUtils:
         ], dtype = np.float64)
         
     @staticmethod
-    def calculate_jacobian_matrix(basis_pose_matrixs:list) -> np.typing.NDArray:
+    def calculate_jacobian_matrix(basis_pose_matrixs:list,
+                                  mode:str = "full") -> np.typing.NDArray:
         """Construct a Jacobian matrix from D-H table.
     
         Args:
@@ -78,11 +79,17 @@ class KinematicUtils:
             Jv.append(np.cross(zs[i], p_end - ps[i]))
             Jw.append(zs[i])
         J = np.vstack([np.array(Jv).T, np.array(Jw).T])
-        return J
+        
+        match mode:
+            case "full":
+                return J
+            case "positional":
+                return Jv
        
     @staticmethod 
-    def calculate_pose_error(target_pose_matrix,
-                             current_pose_matrix) -> np.typing.NDArray:
+    def calculate_pose_matrix_error(target_pose_matrix,
+                                    current_pose_matrix,
+                                    mode:str = "full") -> np.typing.NDArray:
         """Calculating pose error in the numerical solution process of inverse kinematics.
     
         Args:
@@ -93,17 +100,22 @@ class KinematicUtils:
             np.typing.NDArray: Column vector of axial pose error.
         """
         
-        p_error = target_pose_matrix[0:3,3] - current_pose_matrix[0:3,3]
-        r_matrix_target  = target_pose_matrix[0:3, 0:3]
-        r_matrix_current = current_pose_matrix[0:3, 0:3]
-        r_matrix_error   = r_matrix_target @ r_matrix_current.T
-        log_R = scipy.linalg.logm(r_matrix_error)
-        o_error = np.array([
+        position_error = target_pose_matrix[0:3,3] - current_pose_matrix[0:3,3]
+        rotation_matrix_target  = target_pose_matrix[0:3, 0:3]
+        rotation_matrix_current = current_pose_matrix[0:3, 0:3]
+        rotation_matrix_error   = rotation_matrix_target @ rotation_matrix_current.T
+        log_R = scipy.linalg.logm(rotation_matrix_error)
+        orientation_error = np.array([
             log_R[2,1],
             log_R[0,2],
             log_R[1,0]
         ])
-        return np.append(p_error, o_error)
+        pose_error = np.append(position_error, orientation_error)
+        match mode:
+            case "full":
+                return pose_error
+            case "positional":
+                return position_error
     
     @staticmethod
     def calculate_dh_parameters(endpoint_vector:np.typing.NDArray,
@@ -158,7 +170,7 @@ class KinematicUtils:
         return lam
     
     @staticmethod
-    def calculate_position_from_po_matrix(po_matrix:np.typing.NDArray) -> tuple:
+    def calculate_position_from_pose_matrix(po_matrix:np.typing.NDArray) -> tuple:
         """Calculate position coordinate from a given position-orientation matix.
     
         Args:
@@ -333,6 +345,7 @@ class KinematicUtils:
     @staticmethod
     def inverse_kinematics(control_object:ComputableAssembly,
                            target_pose_matrix:np.typing.NDArray, 
+                           mode:str = "full",
                            max_iteration:int = 500, 
                            shreshold:float = 1e-3, 
                            learning_rate:float = 0.2,
@@ -353,16 +366,17 @@ class KinematicUtils:
         logger = Log4P()
         currrent_control_variable_list = control_object.retrieve_control_variable_list()
         target_control_variable_list = currrent_control_variable_list
-        normalized_pose_error_history = []
+        normalized_error_history = []
         for i in range(max_iteration):
             pose_matrixs_dict = KinematicUtils.calculate_pose_matrix_dict(control_object,
                                                                           target_control_variable_list)
             current_pose_matrix = list(pose_matrixs_dict.values())[-1]
-            pose_error = KinematicUtils.calculate_pose_error(target_pose_matrix, current_pose_matrix)
-            normalized_pose_error_history.append(np.linalg.norm(pose_error))
+            error = KinematicUtils.calculate_pose_matrix_error(target_pose_matrix, current_pose_matrix, 
+                                                               mode = mode)
+            normalized_error_history.append(np.linalg.norm(error))
             if enable_log:
-                logger.info(f"[{i}] error norm = {np.linalg.norm(pose_error):.6f}, current_control_variables = {target_control_variable_list}")
-            if np.linalg.norm(pose_error) < shreshold:
+                logger.info(f"[{i}] error norm = {np.linalg.norm(error):.6f}, current_control_variables = {target_control_variable_list}")
+            if np.linalg.norm(error) < shreshold:
                 delta_control_variable_list = [
                     target_control_variable - current_control_variable for target_control_variable, current_control_variable in zip(target_control_variable_list, currrent_control_variable_list)
                 ]
@@ -372,23 +386,59 @@ class KinematicUtils:
             basis_pose_matrixs = []
             for name in basis_names:
                 basis_pose_matrixs.append(pose_matrixs_dict[name])
-            J = KinematicUtils.calculate_jacobian_matrix(basis_pose_matrixs)
-            delta_control_variable_vector = learning_rate * np.linalg.pinv(J) @ pose_error
+            J = KinematicUtils.calculate_jacobian_matrix(basis_pose_matrixs, 
+                                                         mode = mode)
+            delta_control_variable_vector = learning_rate * np.linalg.pinv(J) @ error
             new_control_variable_vector = np.array(target_control_variable_list) + delta_control_variable_vector
             target_control_variable_list = new_control_variable_vector.tolist()
-            if len(normalized_pose_error_history) > max_iteration/2:
-                if normalized_pose_error_history[-max_iteration//2] - normalized_pose_error_history[-1]  < 0.1 * normalized_pose_error_history[-1]:
+            if len(normalized_error_history) > max_iteration/2:
+                if normalized_error_history[-max_iteration//2] - normalized_error_history[-1]  < 0.1 * normalized_error_history[-1]:
                     target_control_variable_list = [-control_variable for control_variable in currrent_control_variable_list]
-                    normalized_pose_error_history = []
+                    normalized_error_history = []
         raise RuntimeError("Inverse Kinematic Analysis Failed...")
     
     @staticmethod
+    def generate_pose_matrix_from_position(position:tuple) -> np.typing.NDArray:
+        return np.array([
+            [1, 0, 0, position[0]],
+            [0, 1, 0, position[1]],
+            [0, 0, 1, position[2]],
+            [0, 0, 0, 1]
+        ])
+        
+    @staticmethod
+    def generate_positional_vector_from_pose_matrix(current_pose_matrix:np.typing.NDArray,
+                                                    target_pose_matrix:np.typing.NDArray):
+        vector = [
+            target_pose_matrix[0, 3] - current_pose_matrix[0, 3],
+            target_pose_matrix[1, 3] - current_pose_matrix[1, 3],
+            target_pose_matrix[2, 3] - current_pose_matrix[2, 3]
+        ]
+        return np.array(vector)
+    
+    @staticmethod
+    def generate_midway_pose_matrix(current_pose_matrix:np.typing.NDArray,
+                                    target_pose_matrix:np.typing.NDArray,
+                                    portion:float) -> np.typing.NDArray:
+        vector = KinematicUtils.generate_positional_vector_from_pose_matrix(
+            current_pose_matrix, target_pose_matrix
+        )
+        midway_pose_matrix = current_pose_matrix
+        midway_pose_matrix[0, 3] += vector[0]*portion
+        midway_pose_matrix[1, 3] += vector[1]*portion
+        midway_pose_matrix[2, 3] += vector[2]*portion
+        return midway_pose_matrix
+    
+    @staticmethod
     def check_reachable(control_object:ComputableAssembly,
-                        target_pose_matrix:np.typing.NDArray) -> tuple:
+                        target_pose_matrix:np.typing.NDArray,
+                        mode:str = "full",
+                        enable_log:bool = False) -> tuple:
         try:
             target_control_variable_list = KinematicUtils.inverse_kinematics(control_object,
                                                                              target_pose_matrix,
-                                                                             enable_log= True)
+                                                                             enable_log= enable_log,
+                                                                             mode = mode)
             return True, target_control_variable_list
         except Exception as e:
             return False, str(e)
@@ -396,9 +446,13 @@ class KinematicUtils:
     @staticmethod
     def tp_linear_joint_interpolation(control_object:ComputableAssembly,
                                       target_pose_matrix:np.typing.NDArray,
-                                      step_num:int = 50) -> list:
+                                      mode:str = "full",
+                                      enable_log:bool = False,
+                                      step_num:int = 50,) -> list:
         is_recachable, result = KinematicUtils.check_reachable(control_object,
-                                                               target_pose_matrix)
+                                                               target_pose_matrix,
+                                                               mode = mode,
+                                                               enable_log = enable_log)
         if is_recachable:
             start_control_variable_list = control_object.retrieve_control_variable_list()
             end_control_variable_list = result

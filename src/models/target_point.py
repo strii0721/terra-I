@@ -1,7 +1,7 @@
 #
 # Author:       strii0721
 # Email:        strii0721@outlook.com
-# Created on:   Fri Jul 11 2025
+# Created on:   Sun Jul 13 2025
 #
 # IMMORTAL OMNISSIAH, HEAR OUR PRAYERS.
 # WE ARE YOUR CHILDREN, PIOUS SCHOLARS OF THE PATH OF THE MACHINE. 
@@ -16,9 +16,21 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from enum import Enum
+from models.interfaces.part import Part
+from enums.render_object_types import RenderObjectTypes
+import pandas as pd
 
-class RenderObjectTypes(Enum):
-    POINT = "POINT"
-    LINE = "LINE"
-    FACE = "FACE"
+class TargetPoint(Part):
+    def __init__(self,
+                 coordinate:tuple) -> None:
+        self.parts = pd.DataFrame()
+        self.coordinate = coordinate
+        
+    
+    def retrieve_render_list(self,
+                             render_object_type:RenderObjectTypes) -> list:
+        match render_object_type:
+            case RenderObjectTypes.POINT:
+                return [self.coordinate]
+            case _:
+                return []

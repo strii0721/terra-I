@@ -24,6 +24,7 @@ from visualization.renderer import Renderer
 from models.hull import Hull
 from math import pi
 from controllers.simulation_controller import SimulationController
+from models.target_point import TargetPoint
 
 CONTROL_INTERVAL = 0.1
 RENDER_INTERVAL = 0.1
@@ -52,6 +53,7 @@ R_LISTEN_LIST = [
     "r-link_3-0"
 ]
 HULL = Hull()
+TARGET = TargetPoint((200,200,400))
 LEFT_ARM = RoboticArm()\
     .construct(Link("l-link_0-0", np.array([5.1, 0, 0])))\
     .construct(Link("l-link_0-1", np.array([0, 5.3, 0])))\

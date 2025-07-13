@@ -26,6 +26,7 @@ class Renderer:
     def __init__(self,
                  render_interval = 0.1) -> None:
         self.render_interval = render_interval
+        self.points = []
         self.lines = []
         self.faces = []
         
@@ -47,6 +48,14 @@ class Renderer:
         self.ax.clear()
         x_min = y_min = z_min = 0
         x_max = y_max = z_max = 0
+        
+        # render points
+        xs = ys = zs = []
+        for coordinate in self.points:
+            self.ax.scatter(coordinate[0], 
+                            coordinate[1],
+                            coordinate[2], s=50, c="red", marker='o')
+            
              
         # render lines
         for start_point, end_point in self.lines:
@@ -78,6 +87,13 @@ class Renderer:
         
         plt.draw()
         plt.pause(self.render_interval)
+        
+    def add_points(self,
+                  points_list:list) -> None:
+        self.points = self.points + points_list
+        
+    def clean_points(self) -> None:
+        self.points = []
         
     def add_lines(self,
                   lines_list:list) -> None:
