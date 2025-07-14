@@ -17,7 +17,7 @@
 #
 
 from math import pi
-from utils.kinematic_utils import KinematicUtils
+from kinematics.utils.kinematic_utils import KinematicUtils
 import time
 from dk.logger.log4p import Log4P
 import saves.statics.error_1 as CFG

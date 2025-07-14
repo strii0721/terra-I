@@ -16,19 +16,44 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from models.interfaces.joint import Joint
-from enums.part_types import PartTypes
+from models.part import Part
+from models.enums.part_types import PartTypes
 import numpy as np
 
-class RotationalJoint(Joint):
+class Link(Part):
     
     def __init__(self,
                  name:str,
-                 rotation_direction:np.typing.NDArray,
-                 initial_control_variable:float = 0,
+                 endpoint_vector:np.typing.NDArray,
                  visibility:bool = True):
         self.name = name
-        self.type = PartTypes.ROTATIONAL_JOINT
-        self.rotation_direction = rotation_direction
-        self.control_variable = initial_control_variable
+        self.type = PartTypes.LINK
+        self.endpoint_vector = endpoint_vector
         self.visibility = visibility
+    
+    @property
+    def name(self) -> str:
+        return self._name
+    
+    @name.setter
+    def name(self, 
+             value:str) -> None:
+        self._name = value
+    
+    @property
+    def type(self) -> PartTypes:
+        return self._type
+    
+    @type.setter
+    def type(self,
+             value:PartTypes) -> None:
+        self._type = value
+    
+    @property
+    def visibility(self) -> bool:
+        return self._visibility
+    
+    @visibility.setter
+    def visibility(self, 
+                   value:bool) -> None:
+        self._visibility = value

@@ -16,25 +16,48 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from typing import Protocol
-from models.interfaces.assembly import Assembly
+from abc import ABC, abstractmethod
+from models.kinematic_computable_assembly import  KinematicComputableAssembly
+from typing import Self
 
-class BaseController(Protocol):
-       
-    control_object: Assembly
+class BaseController(ABC):
     
-    control_interval: float
-    
-    def initialize(self) -> None:
+    @property
+    @abstractmethod
+    def control_object(self) -> KinematicComputableAssembly:
         pass
     
+    @control_object.setter
+    @abstractmethod
+    def control_object(self,
+                       value:KinematicComputableAssembly):
+        pass
+    
+    @property
+    @abstractmethod
+    def control_interval(self) -> float:
+        pass
+    
+    @control_interval.setter
+    @abstractmethod
+    def control_interval(self,
+                         value:float) -> None:
+        pass
+    
+    @abstractmethod
+    def initialize(self) -> Self:
+        pass
+    
+    @abstractmethod
     def standard_input(self,
                        control_variable_list:list) -> None:
         pass
     
+    @abstractmethod
     def delta_input(self,
                     delta_control_variable_list:list) -> None:
         pass
     
+    @abstractmethod
     def standard_output(self) -> list:
         pass

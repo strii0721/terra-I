@@ -16,16 +16,24 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from models.interfaces.assembly import Assembly
+from models.assembly import Assembly
 import pandas as pd
-from enums.render_object_types import RenderObjectTypes
+from visualizations.enums.render_object_types import RenderObjectTypes
 
 class Hull(Assembly):
     
     def __init__(self) -> None:
         self.parts = pd.DataFrame()
         
+    @property
+    def parts(self) -> pd.DataFrame:
+        return self._parts
     
+    @parts.setter
+    def parts(self,
+              value:pd.DataFrame) -> None:
+        self._parts = value
+        
     def retrieve_render_list(self,
                              render_object_type:RenderObjectTypes) -> list:
         match render_object_type:

@@ -16,29 +16,40 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from models.interfaces.part import Part
-from enums.part_types import PartTypes
-import numpy as np
+from abc import ABC, abstractmethod
+from models.enums.part_types import PartTypes
 
-class Link(Part):
-    
-    def __init__(self,
-                 name:str,
-                 endpoint_vector:np.typing.NDArray,
-                 visibility:bool = True):
-        self._name = name
-        self._type = PartTypes.LINK
-        self.endpoint_vector = endpoint_vector
-        self._visibility = visibility
+class Part(ABC):
     
     @property
+    @abstractmethod
     def name(self) -> str:
-        return self._name
+        pass
+    
+    @name.setter
+    @abstractmethod
+    def name(self, 
+             value:str) -> None:
+        pass
     
     @property
+    @abstractmethod
     def type(self) -> PartTypes:
-        return self._type
+        pass
+    
+    @type.setter
+    @abstractmethod
+    def type(self,
+             value:PartTypes) -> None:
+        pass
     
     @property
+    @abstractmethod
     def visibility(self) -> bool:
-        return self._visibility
+        pass
+    
+    @visibility.setter
+    @abstractmethod
+    def visibility(self, 
+                   value) -> None:
+        pass

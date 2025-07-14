@@ -20,11 +20,11 @@ from models.robotic_arm import RoboticArm
 from models.link import Link
 from models.rotational_joint import RotationalJoint
 import numpy as np
-from visualization.renderer import Renderer
+from visualizations.renderer import Renderer
 from models.hull import Hull
 from math import pi
-from controllers.simulation_controller import SimulationController
-from enums.render_object_types import RenderObjectTypes
+from kinematics.controllers.impl.simulation_controller import SimulationController
+from visualizations.enums.render_object_types import RenderObjectTypes
 
 CONTROL_INTERVAL = 0.1
 RENDER_INTERVAL = 0.1

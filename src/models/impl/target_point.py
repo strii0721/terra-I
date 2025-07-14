@@ -16,15 +16,24 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from models.interfaces.part import Part
-from enums.render_object_types import RenderObjectTypes
+from models.assembly import Assembly
+from visualizations.enums.render_object_types import RenderObjectTypes
 import pandas as pd
 
-class TargetPoint(Part):
+class TargetPoint(Assembly):
     def __init__(self,
                  coordinate:tuple) -> None:
         self.parts = pd.DataFrame()
         self.coordinate = coordinate
+        
+    @property
+    def parts(self) -> pd.DataFrame:
+        return self._parts
+    
+    @parts.setter
+    def parts(self,
+              value:pd.DataFrame) -> None:
+        self._parts = value
         
     
     def retrieve_render_list(self,

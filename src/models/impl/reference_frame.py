@@ -16,9 +16,41 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from models.interfaces.part import Part
-from typing import Protocol
+from models.part import Part
+from models.enums.part_types import PartTypes
 
-class Joint(Part, Protocol):
+class ReferenceFrame(Part):
     
-    control_variable: float
+    def __init__(self,
+                 name:str,
+                 visibility:bool = False) -> None:
+        self.name = name
+        self.type = PartTypes.REFERENCE_FRAME
+        self.visibility = visibility
+    
+    @property
+    def name(self) -> str:
+        return self._name
+    
+    @name.setter
+    def name(self, 
+             value:str) -> None:
+        self._name = value
+    
+    @property
+    def type(self) -> PartTypes:
+        return self._type
+    
+    @type.setter
+    def type(self,
+             value:PartTypes) -> None:
+        self._type = value
+    
+    @property
+    def visibility(self) -> bool:
+        return self._visibility
+    
+    @visibility.setter
+    def visibility(self, 
+                   value:bool) -> None:
+        self._visibility = value

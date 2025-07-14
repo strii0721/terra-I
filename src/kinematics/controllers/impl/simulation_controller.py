@@ -16,12 +16,12 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from controllers.interfaces.base_controller import BaseController
-from models.robotic_arm import RoboticArm
+from kinematics.controllers.base_controller import BaseController
+from models.kinematic_computable_assembly import KinematicComputableAssembly
 import os
 from dk.logger.log4p import Log4P
-from utils.kinematic_utils import KinematicUtils
-from enums.part_types import PartTypes
+from kinematics.utils.kinematic_utils import KinematicUtils
+from models.enums.part_types import PartTypes
 from typing import Self
 import numpy as np
 import time
@@ -32,10 +32,28 @@ from math import pi
 class SimulationController(BaseController):
     
     def __init__(self,
-                 control_object:RoboticArm,
+                 control_object:KinematicComputableAssembly,
                  control_interval:float = 0.1):
         self.control_object = control_object
         self.control_interval = control_interval
+        
+    @property
+    def control_object(self) -> KinematicComputableAssembly:
+        return self._control_object
+    
+    @control_object.setter
+    def control_object(self,
+                       value:KinematicComputableAssembly):
+        self._control_object = value
+    
+    @property
+    def control_interval(self) -> float:
+        return self._control_interval
+    
+    @control_interval.setter
+    def control_interval(self,
+                         value:float) -> None:
+        self._control_interval = value
     
     def initialize(self) -> Self:
         self.control_object.initialize()

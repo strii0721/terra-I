@@ -16,13 +16,18 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from typing import Protocol
-from enums.part_types import PartTypes
+from models.part import Part
+from abc import abstractmethod
 
-class Part(Protocol):
+class Joint(Part):
     
-    name: str
+    @property
+    @abstractmethod
+    def control_variable(self) -> float:
+        pass
     
-    type: PartTypes
-
-    visibility: bool
+    @control_variable.setter
+    @abstractmethod
+    def control_variable(self, 
+                         value: float) -> None:
+        pass

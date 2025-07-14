@@ -22,13 +22,8 @@ import scipy
 from math import sqrt
 from utils.spatial_utils import SpatialUtils
 from dk.logger.log4p import Log4P
-from models.interfaces.assembly import Assembly
-from kinematics.interfaces.kinematic_computing import KinematicComputing
-from enums.part_types import PartTypes
-from typing import Protocol
-
-class ComputableAssembly(Assembly, KinematicComputing, Protocol):
-    pass
+from models.kinematic_computable_assembly import KinematicComputableAssembly
+from models.enums.part_types import PartTypes
 
 class KinematicUtils:
     
@@ -79,12 +74,14 @@ class KinematicUtils:
             Jv.append(np.cross(zs[i], p_end - ps[i]))
             Jw.append(zs[i])
         J = np.vstack([np.array(Jv).T, np.array(Jw).T])
-        
+        Jv = np.array(Jv)
         match mode:
             case "full":
                 return J
             case "positional":
                 return Jv
+            case _:
+                raise Exception("Mode not support...")
        
     @staticmethod 
     def calculate_pose_matrix_error(target_pose_matrix,
@@ -116,6 +113,8 @@ class KinematicUtils:
                 return pose_error
             case "positional":
                 return position_error
+            case _:
+                raise Exception("Mode not support...")
     
     @staticmethod
     def calculate_dh_parameters(endpoint_vector:np.typing.NDArray,
@@ -203,7 +202,7 @@ class KinematicUtils:
         return x_vector, y_vector, z_vector
     
     @staticmethod
-    def calculate_compensation_transformation_matrix_dict(control_object:ComputableAssembly,
+    def calculate_compensation_transformation_matrix_dict(control_object:KinematicComputableAssembly,
                                                           control_variables:list) -> dict:
         """Calculate the transformation matrix between each part and its bound reference frame.
     
@@ -246,7 +245,7 @@ class KinematicUtils:
         return transformation_matrix_dict
     
     @staticmethod
-    def calculate_dh_table(control_object:ComputableAssembly,
+    def calculate_dh_table(control_object:KinematicComputableAssembly,
                            control_variables:list) -> list:
         """Generate standard D-H table from given inputs. It should be noted that the generated D-H table is the parameters of each reference frame rather than each joint.
     
@@ -286,7 +285,7 @@ class KinematicUtils:
         return dh_table
     
     @staticmethod
-    def calculate_pose_matrix_dict(control_object:ComputableAssembly,
+    def calculate_pose_matrix_dict(control_object:KinematicComputableAssembly,
                                    control_variable_list:list) -> dict:
         """Perform forward kinematic analysis and return position-orientation matrixs of each joints and reference frame.
     
@@ -301,7 +300,7 @@ class KinematicUtils:
             raise Exception("The number of input signals does not match the number of joints...")
         dh_table = KinematicUtils.calculate_dh_table(control_object,
                                                      control_variable_list)
-        compensate_transformation_matrixs_dict = KinematicUtils.calculate_compensation_transformation_matrix_dict(control_object,
+        compensate_transformation_matrixs_dict = KinematicUtils.calculate_compensation_transformation_matrix_dict(control_object, 
                                                                                                                   control_variable_list)
         names = control_object.retrieve_reference_frame_index_list()
         reference_frame_pose_matrixs = KinematicUtils.cascade_forward_kinematics(dh_table = dh_table,
@@ -343,7 +342,7 @@ class KinematicUtils:
         return pose_matrixs_dict
     
     @staticmethod
-    def inverse_kinematics(control_object:ComputableAssembly,
+    def inverse_kinematics(control_object:KinematicComputableAssembly,
                            target_pose_matrix:np.typing.NDArray, 
                            mode:str = "full",
                            max_iteration:int = 400, 
@@ -430,7 +429,7 @@ class KinematicUtils:
         return midway_pose_matrix
     
     @staticmethod
-    def check_reachable(control_object:ComputableAssembly,
+    def check_reachable(control_object:KinematicComputableAssembly,
                         target_pose_matrix:np.typing.NDArray,
                         mode:str = "full",
                         enable_log:bool = False) -> tuple:
@@ -444,7 +443,7 @@ class KinematicUtils:
             return False, str(e)
     
     @staticmethod
-    def tp_linear_joint_interpolation(control_object:ComputableAssembly,
+    def tp_linear_joint_interpolation(control_object:KinematicComputableAssembly,
                                       target_pose_matrix:np.typing.NDArray,
                                       mode:str = "full",
                                       enable_log:bool = False,

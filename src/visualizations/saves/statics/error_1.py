@@ -16,14 +16,14 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from models.robotic_arm import RoboticArm
-from models.link import Link
-from models.rotational_joint import RotationalJoint
+from models.impl.robotic_arm import RoboticArm
+from models.impl.link import Link
+from models.impl.rotational_joint import RotationalJoint
 import numpy as np
-from visualization.renderer import Renderer
-from models.hull import Hull
+from visualizations.renderer import Renderer
+from models.impl.hull import Hull
 from math import pi
-from controllers.simulation_controller import SimulationController
+from kinematics.controllers.impl.simulation_controller import SimulationController
 
 CONTROL_INTERVAL = 0.1
 RENDER_INTERVAL = 0.1

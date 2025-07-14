@@ -16,16 +16,15 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from models.interfaces.assembly import Assembly
-from kinematics.interfaces.kinematic_computing import KinematicComputing
+from models.kinematic_computable_assembly import KinematicComputableAssembly
 import pandas as pd
-from enums.render_object_types import RenderObjectTypes
+from visualizations.enums.render_object_types import RenderObjectTypes
 from utils.data_frame_utils import DataFrameUtils
-from enums.part_types import PartTypes
-from models.reference_frame import ReferenceFrame
+from models.enums.part_types import PartTypes
+from models.impl.reference_frame import ReferenceFrame
 from typing import Self
 
-class RoboticArm(Assembly, KinematicComputing):
+class RoboticArm(KinematicComputableAssembly):
     
     def __init__(self) -> None:
         self.parts = pd.DataFrame({
@@ -42,6 +41,33 @@ class RoboticArm(Assembly, KinematicComputing):
         })
         # self.reference_frames["pose_matrix"] = self.reference_frames["pose_matrix"].astype(object)
         self.inverse_kinematic_analysis_basis = []
+        
+    @property
+    def parts(self) -> pd.DataFrame:
+        return self._parts
+    
+    @parts.setter
+    def parts(self,
+              value:pd.DataFrame) -> None:
+        self._parts = value
+        
+    @property
+    def reference_frames(self) -> pd.DataFrame:
+        return self._reference_frames
+    
+    @reference_frames.setter
+    def reference_frames(self,
+                         value:pd.DataFrame) -> None:
+        self._reference_frames = value
+    
+    @property
+    def inverse_kinematic_analysis_basis(self) -> list:
+        return self._inverse_kinematic_analysis_basis
+    
+    @inverse_kinematic_analysis_basis.setter
+    def inverse_kinematic_analysis_basis(self,
+                                         value: list) -> None:
+        self._inverse_kinematic_analysis_basis = value
     
     def retrieve_render_list(self,
                              render_object_type:RenderObjectTypes) -> list:
@@ -161,7 +187,7 @@ class RoboticArm(Assembly, KinematicComputing):
                     self.reference_frames.at[idx, "pose_matrix"] = pose_matrix
     
     def update_control_variable(self,
-                                 control_variables:list) -> None:
+                                control_variables:list) -> None:
         control_variables_enum = enumerate(control_variables)
         for _, part in self.parts.iterrows():
             match part["entity"].type:

@@ -16,14 +16,24 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from typing import Protocol
+from abc import ABC, abstractmethod
 import pandas as pd
-from enums.render_object_types import RenderObjectTypes
+from visualizations.enums.render_object_types import RenderObjectTypes
 
-class Assembly(Protocol):
+class Assembly(ABC):
     
-    parts: pd.DataFrame
+    @property
+    @abstractmethod
+    def parts(self) -> pd.DataFrame:
+        pass
     
+    @parts.setter
+    @abstractmethod
+    def parts(self,
+              value:pd.DataFrame) -> None:
+        pass
+    
+    @abstractmethod
     def retrieve_render_list(self,
                              render_object_type:RenderObjectTypes) -> list:
         pass

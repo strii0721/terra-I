@@ -16,11 +16,11 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-import saves.statics.default as CFG
+import visualizations.saves.statics.default as CFG
 from threading import Thread
-from enums.render_object_types import RenderObjectTypes
+from visualizations.enums.render_object_types import RenderObjectTypes
 
-from utils.kinematic_utils import KinematicUtils
+from kinematics.utils.kinematic_utils import KinematicUtils
 from math import pi
 
 '''

@@ -19,7 +19,8 @@
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MultipleLocator
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
-import time
+from mpl_toolkits.mplot3d import Axes3D 
+from mpl_toolkits.mplot3d.axes3d import Axes3D
 
 class Renderer:
     
@@ -54,7 +55,7 @@ class Renderer:
         for coordinate in self.points:
             self.ax.scatter(coordinate[0], 
                             coordinate[1],
-                            coordinate[2], s=50, c="red", marker='o')
+                            coordinate[2], s = 50, c= "red", marker='o')
             
              
         # render lines
