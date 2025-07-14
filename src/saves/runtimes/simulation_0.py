@@ -29,7 +29,8 @@ This simulation demonstrates the initialisation process of the robotic arm.
 '''
 
 # Variable Area #########################################################
-POSITION_TEST = KinematicUtils.generate_pose_matrix_from_position(CFG.TARGET.coordinate)
+TARGET_1 = KinematicUtils.generate_pose_matrix_from_position(CFG.TARGET_1.coordinate)
+TARGET_2 = KinematicUtils.generate_pose_matrix_from_position(CFG.TARGET_2.coordinate)
 LEFT_STOP_0 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [0, 0, -pi])["l-link_3-0"]
 LEFT_STOP_1 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [-pi/2, 0, -pi])["l-link_3-0"]
 LEFT_STOP_2 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [-pi/2, 0, -pi/2])["l-link_3-0"]
@@ -41,7 +42,8 @@ l_target_pose_matrix_list = [
     LEFT_STOP_2, 
     LEFT_STOP_3, 
     # LEFT_ACTION_1,
-    POSITION_TEST
+    TARGET_1,
+    TARGET_2
 ]
 RIGHT_STOP_0 = KinematicUtils.calculate_pose_matrix_dict(CFG.RIGHT_ARM, [pi, 0, pi])["r-link_3-0"]
 RIGHT_STOP_1 = KinematicUtils.calculate_pose_matrix_dict(CFG.RIGHT_ARM, [pi/2, 0, pi])["r-link_3-0"]
@@ -55,7 +57,8 @@ r_target_pose_matrix_list = [
     RIGHT_STOP_2, 
     RIGHT_STOP_3, 
     # RIGHT_ACTION_1,
-    POSITION_TEST
+    TARGET_1,
+    TARGET_2
 ]
 
 #########################################################################
@@ -82,7 +85,8 @@ def FRAME():
     CFG.RENDERER.clean_faces()
     
     CFG.RENDERER.add_faces(CFG.HULL.retrieve_render_list(RenderObjectTypes.FACE))
-    CFG.RENDERER.add_points(CFG.TARGET.retrieve_render_list(RenderObjectTypes.POINT))
+    CFG.RENDERER.add_points(CFG.TARGET_1.retrieve_render_list(RenderObjectTypes.POINT))
+    CFG.RENDERER.add_points(CFG.TARGET_2.retrieve_render_list(RenderObjectTypes.POINT))
     CFG.RENDERER.add_lines(CFG.LEFT_ARM.retrieve_render_list(RenderObjectTypes.LINE))
     CFG.RENDERER.add_lines(CFG.RIGHT_ARM.retrieve_render_list(RenderObjectTypes.LINE))
     
