@@ -21,6 +21,7 @@ from matplotlib.ticker import MultipleLocator
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 from mpl_toolkits.mplot3d import Axes3D 
 from mpl_toolkits.mplot3d.axes3d import Axes3D
+from typing import cast
 
 class Renderer:
     
@@ -33,7 +34,7 @@ class Renderer:
         
         self.fig = plt.figure()
         self.fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
-        self.ax = self.fig.add_subplot(111, projection='3d')
+        self.ax = cast(Axes3D,self.fig.add_subplot(111, projection='3d'))
         self.max_x_min = -250
         self.min_x_max = 550
         self.max_y_min = -100
