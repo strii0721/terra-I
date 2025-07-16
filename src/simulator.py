@@ -16,7 +16,7 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from visualizations.saves.runtimes.simulation_0 import THREAD_LIST, FRAME
+from visualizations.saves.runtimes.simulation_1 import THREAD_LIST, FRAME
 
 # Start daemon process #########################################################
 for thread in THREAD_LIST:

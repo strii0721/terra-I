@@ -287,13 +287,14 @@ class KinematicUtils:
     @staticmethod
     def calculate_pose_matrix_dict(control_object:KinematicComputableAssembly,
                                    control_variable_list:list) -> dict:
-        """Perform forward kinematic analysis and return position-orientation matrixs of each joints and reference frame.
+        """Perform forward kinematic analysis and return pose matrixs of each joints and reference frame.
     
         Args:
-            inputs (list): Input sequence.
+            control_object (KinematicComputableAssembly):   An assembly
+            control_variable_list (list):                   Input control variable list
     
         Returns:
-            dict: Position-orientation matrix of each joints and reference frame.
+            dict: Pose matrix of each joints and reference frame.
         """
         
         if len(control_variable_list) != control_object.retrive_joint_num():
