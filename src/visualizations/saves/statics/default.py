@@ -58,32 +58,32 @@ TARGET_2 = TargetPoint((0.160000, 0.060000, 0.470000))
 LEFT_ARM = RoboticArm()\
     .construct(Link("l-link_0-0", np.array([0.005100, 0.000000, 0.000000]), rho = 1300, sectional_area = 8.1e-5))\
     .construct(Link("l-link_0-1", np.array([0.000000, 0.005300, 0.000000]), rho = 1300, sectional_area = 8.1e-5))\
-    .construct(RotationalJoint("la-j1", np.array([0, 1, 0]), initial_control_variable = 0, mass = 0.012, torque_limit = 12))\
+    .construct(RotationalJoint("la-j1", np.array([0, 1, 0]), initial_control_variable = 0, mass = 0.012, torque_limit = 1.176798))\
     .construct(Link("l-link_1-0", np.array([0.030891, 0.000000, 0.000000]), rho = 1300, sectional_area = 8.1e-5))\
     .construct(Link("l-link_1-1", np.array([0.000000, -0.019450, 0.000000]), rho = 1300, sectional_area = 8.1e-5))\
-    .construct(RotationalJoint("la-j2", np.array([0, -1, 0]), initial_control_variable = 0, mass = 0.012, torque_limit = 12))\
+    .construct(RotationalJoint("la-j2", np.array([0, -1, 0]), initial_control_variable = 0, mass = 0.012, torque_limit = 1.176798))\
     .construct(Link("l-link_2-0", np.array([0.000000, 0.000000, -0.019450]), rho = 1300, sectional_area = 8.1e-5))\
     .construct(Link("l-link_2-1", np.array([0.269910, 0.000000, 0.000000]), rho = 1300, sectional_area = 8.1e-5))\
     .construct(Link("l-link_2-2", np.array([0.000000, 0.022800, 0.000000]), rho = 1300, sectional_area = 8.1e-5))\
-    .construct(RotationalJoint("la-j3", np.array([0, 1, 0]), initial_control_variable = pi, mass = 0.012, torque_limit = 12))\
+    .construct(RotationalJoint("la-j3", np.array([0, 1, 0]), initial_control_variable = 0, mass = 0.012, torque_limit = 1.176798))\
     .construct(Link("l-link_3-0", np.array([0.250000, 0.000000, 0.000000]), rho = 1300, sectional_area = 8.1e-5))
-L_CONTROLLER = SimulationController(LEFT_ARM, control_interval = CONTROL_INTERVAL)\
+L_CONTROLLER = SimulationController(LEFT_ARM, control_interval = CONTROL_INTERVAL, gravity_impact_factor = 1)\
     .initialize()\
     .bind_inverse_kinematic_analysis_basis(L_INVERSE_KINEMATIC_ANALYSIS_BASIS)
 RIGHT_ARM = RoboticArm()\
     .construct(Link("r-link_0-0", np.array([0.360000, 0.134100, 0.000000]), rho = 1300, sectional_area = 8.1e-5, visibility = False))\
     .construct(Link("r-link_0-1", np.array([-0.005100, 0.000000, 0.000000]), rho = 1300, sectional_area = 8.1e-5))\
     .construct(Link("r-link_0-2", np.array([0.000000, -0.005300, 0.000000]), rho = 1300, sectional_area = 8.1e-5))\
-    .construct(RotationalJoint("ra-j1", np.array([0, -1, 0]), initial_control_variable = pi, mass = 0.012, torque_limit = 12))\
+    .construct(RotationalJoint("ra-j1", np.array([0, -1, 0]), initial_control_variable = pi, mass = 0.012, torque_limit = 1.176798))\
     .construct(Link("r-link_1-0", np.array([0.030891, 0.000000, 0.000000]), rho = 1300, sectional_area = 8.1e-5))\
     .construct(Link("r-link_1-1", np.array([0.000000, -0.019450, 0.000000]), rho = 1300, sectional_area = 8.1e-5))\
-    .construct(RotationalJoint("ra-j2", np.array([0, -1, 0]), initial_control_variable = 0, mass = 0.012, torque_limit = 12))\
+    .construct(RotationalJoint("ra-j2", np.array([0, -1, 0]), initial_control_variable = 0, mass = 0.012, torque_limit = 1.176798))\
     .construct(Link("r-link_2-0", np.array([0.000000, 0.000000, -0.019450]), rho = 1300, sectional_area = 8.1e-5))\
     .construct(Link("r-link_2-1", np.array([0.269910, 0.000000, 0.000000]), rho = 1300, sectional_area = 8.1e-5))\
     .construct(Link("r-link_2-2", np.array([0.000000, 0.022800, 0.000000]), rho = 1300, sectional_area = 8.1e-5))\
-    .construct(RotationalJoint("ra-j3", np.array([0, 1, 0]), initial_control_variable = pi, mass = 0.012, torque_limit = 12))\
+    .construct(RotationalJoint("ra-j3", np.array([0, 1, 0]), initial_control_variable = pi, mass = 0.012, torque_limit = 1.176798))\
     .construct(Link("r-link_3-0", np.array([0.250000, 0.000000, 0.000000]), rho = 1300, sectional_area = 8.1e-5))
-R_CONTROLLER = SimulationController(RIGHT_ARM, control_interval = CONTROL_INTERVAL)\
+R_CONTROLLER = SimulationController(RIGHT_ARM, control_interval = CONTROL_INTERVAL, gravity_impact_factor = 1)\
     .initialize()\
     .bind_inverse_kinematic_analysis_basis(R_INVERSE_KINEMATIC_ANALYSIS_BASIS)
 RENDERER = Renderer(render_interval = RENDER_INTERVAL)

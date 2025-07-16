@@ -25,6 +25,7 @@ from typing import cast
 from models.part import Part
 from models.impl.link import Link
 from models.impl.rotational_joint import RotationalJoint
+from math import pi
 
 class DynamicUtils():
     
@@ -70,9 +71,10 @@ class DynamicUtils():
         angular_velocity_list_1 = DynamicUtils.calculate_angular_velocity_list(control_interval,
                                                                           control_variable_list_1,
                                                                           control_variable_list_2)
-        angular_acceleration_list = (np.array(angular_velocity_list_1) - np.array(angular_velocity_list_0) / control_interval).tolist()
+        angular_acceleration_list = (np.array(angular_velocity_list_1) - np.array(angular_velocity_list_0) / control_interval)
+        angular_acceleration_list = angular_acceleration_list / pi * 180
         
-        return angular_acceleration_list
+        return angular_acceleration_list.tolist()
     
     @staticmethod
     def calculate_link_inertia(joint_coordinate:tuple, 
@@ -136,6 +138,48 @@ class DynamicUtils():
         return float(inertia)
     
     @staticmethod
+    def calculate_link_gravity_torque(joint_coordinate:tuple, 
+                                      rotation_direction:np.typing.NDArray,
+                                      link_coordinate_start:tuple,
+                                      link_coordinate_end:tuple,
+                                      link_rho:float,
+                                      link_sectional_area:float,
+                                      impact_factor:float = 0) -> float:
+        
+        gravity_vector = np.array([0, 0, -1])
+        g = 9.8
+        joint_vector = np.array(joint_coordinate)
+        rotation_direction_unit_vector = SpatialUtils.normalize_vector(rotation_direction)
+        link_vector_start = np.array(link_coordinate_start)
+        link_vector_end = np.array(link_coordinate_end)
+        link_vector_centre = (link_vector_end - link_vector_start) / 2
+        l = np.linalg.norm(link_vector_end - link_vector_start)
+        mass = l * link_sectional_area * link_rho
+        r = link_vector_centre - joint_vector
+        F = mass * gravity_vector * g
+        torque_vector = np.cross(r, F)
+        torque = np.dot(torque_vector, rotation_direction_unit_vector)
+        return torque * impact_factor
+        
+    @staticmethod
+    def calculate_particle_gravity_torque(joint_coordinate:tuple, 
+                                          rotation_direction:np.typing.NDArray,
+                                          particle_coordinate:tuple,
+                                          mass:float,
+                                          impact_factor:float = 0) -> float:
+        
+        gravity_vector = np.array([0, 0, -1])
+        g = 9.8
+        joint_vector = np.array(joint_coordinate)
+        particle_vector = np.array(particle_coordinate)
+        rotation_direction_unit_vector = SpatialUtils.normalize_vector(rotation_direction)
+        r = particle_vector - joint_vector
+        F = mass * gravity_vector * g
+        torque_vector = np.cross(r, F)
+        torque = np.dot(torque_vector, rotation_direction_unit_vector)
+        return torque * impact_factor
+    
+    @staticmethod
     def calculate_inertia_list(control_object:KinematicComputableAssembly,
                                control_variable_list:list) -> list:
         """Calcule inertia on each rotational joint with given input control variable list.
@@ -188,3 +232,60 @@ class DynamicUtils():
                                 coordinate_last = coordinate_current
                     inertia_list.append(inertia)
         return inertia_list
+    
+    @staticmethod
+    def calculate_gravity_torque_list(control_object:KinematicComputableAssembly, 
+                                      control_variable_list:list,
+                                      impact_factor:float = 0) -> list:
+        """Calcule gravity torque on each rotational joint with given input control variable list.
+
+        Args:
+            control_object (KinematicComputableAssembly): Analysis target.
+            control_variable_list (list): Input control variable list.
+
+        Returns:
+            list: Gravity torque list on each joint.
+        """        
+        
+        gravity_torque_list = []
+        pose_matrix_dict = KinematicUtils.calculate_pose_matrix_dict(control_object, 
+                                                                     control_variable_list)
+        part_index_list = control_object.retrieve_part_index_list()
+        part_index_list_enum = enumerate(part_index_list)
+        for index, part_index in part_index_list_enum:
+            part = control_object.parts.loc[control_object.parts["index"] == part_index, ["entity"]].iloc[0, 0]
+            part = cast(Part, part)
+            if part.type == PartTypes.ROTATIONAL_JOINT:
+                if index != len(part_index_list) - 1:
+                    part_index_list_subsequent = part_index_list[index + 1:]
+                    gravity_torque = 0
+                    joint_coordinate = KinematicUtils.calculate_position_from_pose_matrix(pose_matrix_dict[part_index])
+                    rotation_direction = KinematicUtils.calculate_orientation_from_pose_matrix(pose_matrix_dict[part_index])[-1]
+                    coordinate_last = coordinate_current = joint_coordinate
+                    for part_index_subsequent in part_index_list_subsequent:
+                        part_subsequent = control_object.parts.loc[control_object.parts["index"] == part_index_subsequent, ["entity"]].iloc[0, 0]
+                        part_subsequent = cast(Part, part_subsequent)
+                        pose_matrix = pose_matrix_dict[part_index_subsequent]
+                        coordinate_current = KinematicUtils.calculate_position_from_pose_matrix(pose_matrix)
+                        match part_subsequent.type:
+                            case PartTypes.LINK:
+                                part_subsequent = cast(Link, part_subsequent)
+                                
+                                gravity_torque += DynamicUtils.calculate_link_gravity_torque(joint_coordinate, 
+                                                                                             rotation_direction,
+                                                                                             coordinate_last, 
+                                                                                             coordinate_current,
+                                                                                             part_subsequent.rho,
+                                                                                             part_subsequent.sectional_area,
+                                                                                             impact_factor = impact_factor)
+                                coordinate_last = coordinate_current
+                            case PartTypes.ROTATIONAL_JOINT:
+                                part_subsequent = cast(RotationalJoint, part_subsequent)
+                                gravity_torque += DynamicUtils.calculate_particle_gravity_torque(joint_coordinate, 
+                                                                                                 rotation_direction,
+                                                                                                 coordinate_current,
+                                                                                                 part_subsequent.mass,
+                                                                                                 impact_factor = impact_factor)
+                                coordinate_last = coordinate_current
+                    gravity_torque_list.append(gravity_torque)
+        return gravity_torque_list

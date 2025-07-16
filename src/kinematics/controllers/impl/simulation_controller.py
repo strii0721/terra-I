@@ -28,15 +28,18 @@ import time
 from typing import Callable
 from utils.spatial_utils import SpatialUtils
 from kinematics.utils.dynamics_utils import DynamicUtils
+from math import pi
 
 class SimulationController(BaseController):
     
     def __init__(self,
                  control_object:KinematicComputableAssembly,
-                 control_interval:float = 0.1):
+                 control_interval:float = 0.1,
+                 gravity_impact_factor:float = 0):
         self.control_object = control_object
         self.control_interval = control_interval
         self.torque_limit_list = []
+        self.gravity_impact_factor = gravity_impact_factor
         
     @property
     def control_object(self) -> KinematicComputableAssembly:
@@ -297,8 +300,8 @@ class SimulationController(BaseController):
         return self
     
     def check_trajectory(self, 
-                         trajectory:list) -> int:
-        invalid_control_loop_index = 0
+                         trajectory:list) -> list:
+        invalid_control_loop_index_list = []
         for control_loop_index, control_variable_list in enumerate(trajectory):
             if control_loop_index >= 1 and control_loop_index <= len(trajectory) -2:
                 inertia_list = DynamicUtils.calculate_inertia_list(self.control_object,
@@ -307,24 +310,44 @@ class SimulationController(BaseController):
                                                                                              trajectory[control_loop_index-1],
                                                                                              trajectory[control_loop_index],
                                                                                              trajectory[control_loop_index+1])
-                torque_list = [I * w for I, w in zip(inertia_list, angular_acceleration_list)]
+                rotation_torque_list = [I * w for I, w in zip(inertia_list, angular_acceleration_list)]
+                gravity_torque_list = DynamicUtils.calculate_gravity_torque_list(self.control_object,
+                                                                                 control_variable_list,
+                                                                                 impact_factor = self.gravity_impact_factor)
+                torque_list = [rotation_torque + gravity_torque for rotation_torque, gravity_torque in zip(rotation_torque_list, gravity_torque_list)]
                 for joint_index, torque in enumerate(torque_list):
-                    print(torque_list)
                     if torque > self.torque_limit_list[joint_index]:
-                        invalid_control_loop_index = control_loop_index
-                        return invalid_control_loop_index
-        return invalid_control_loop_index
+                        invalid_control_loop_index_list.append((control_loop_index, gravity_torque_list, inertia_list))
+        return invalid_control_loop_index_list
     
     def fulfill_trajectory(self, 
                            trajectory:list) -> list:
-        invalid_control_loop_index = self.check_trajectory(trajectory)
-        while invalid_control_loop_index != 0:
-            previous_control_variable_list = np.array(trajectory[invalid_control_loop_index - 1])
-            current_control_variable_list = np.array(trajectory[invalid_control_loop_index])
-            next_control_variable_list = np.array(trajectory[invalid_control_loop_index + 1])
-            pre_insert = ((previous_control_variable_list + current_control_variable_list) / 2).tolist()
-            post_insert = ((current_control_variable_list + next_control_variable_list) / 2).tolist()
-            trajectory.insert(invalid_control_loop_index + 1, post_insert)
-            trajectory.insert(invalid_control_loop_index, pre_insert)
-            invalid_control_loop_index = self.check_trajectory(trajectory)
+        invalid_loop_list = self.check_trajectory(trajectory)
+        
+        while len(invalid_loop_list) != 0:
+            offset = 0
+            for invalid_loop in invalid_loop_list:
+                invalid_loop_index = invalid_loop[0] + offset
+                gravity_torque_list = invalid_loop[1]
+                inertia_list = invalid_loop[2]
+                alpha = ((np.array(self.torque_limit_list) - np.array(gravity_torque_list)) / np.array(inertia_list))
+                previous_control_variable_list = np.array(trajectory[invalid_loop_index - 1])
+                current_control_variable_list = np.array(trajectory[invalid_loop_index])
+                
+                delta_control_variable_list = np.abs(current_control_variable_list - previous_control_variable_list) / pi * 180
+                delta_control_variable_list_max = 0.5 * alpha * self.control_interval**2
+                
+                step_num_list = delta_control_variable_list / delta_control_variable_list_max
+                
+                step_num = int(np.max(np.ceil(step_num_list)))
+                if step_num <= 1:
+                    step_num = 2
+                
+                insert_list = [(previous_control_variable_list + (current_control_variable_list - previous_control_variable_list) * (k / step_num)).tolist() for k in range(1, step_num)]
+                for inserted_control_variable_list in reversed(insert_list):
+                    trajectory.insert(invalid_loop_index, inserted_control_variable_list)
+                    
+                offset += step_num - 1
+
+            invalid_loop_list = self.check_trajectory(trajectory)
         return trajectory
