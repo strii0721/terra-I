@@ -38,12 +38,12 @@ class Hull(Assembly):
                              render_object_type:RenderObjectTypes) -> list:
         match render_object_type:
             case RenderObjectTypes.FACE:
-                x1 = 0
-                y1 = -(38.1+5)
-                z1 = -(26.05-2)
-                x2 = 360
-                y2 = 220.3-(38.1+5)
-                z2 = (2+23.95)
+                x1 = 0.000000
+                y1 = -(0.038100 + 0.005000)
+                z1 = -(0.026050 - 0.002000)
+                x2 = 0.360000
+                y2 = 0.220300 - (0.038100 + 0.005000)
+                z2 = (0.002000 + 0.023950)
                 faces_list = [
                     [(x1, y1, z1), (x1, y2, z1), (x2, y2, z1), (x2, y1, z1)],
                     [(x1, y1, z1), (x1, y1, z2), (x1, y2, z2), (x1, y2, z1)],

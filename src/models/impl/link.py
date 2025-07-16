@@ -25,10 +25,14 @@ class Link(Part):
     def __init__(self,
                  name:str,
                  endpoint_vector:np.typing.NDArray,
+                 rho = 0,
+                 sectional_area:float = 0,
                  visibility:bool = True):
         self.name = name
         self.type = PartTypes.LINK
         self.endpoint_vector = endpoint_vector
+        self.rho = rho
+        self.sectional_area = sectional_area
         self.visibility = visibility
     
     @property

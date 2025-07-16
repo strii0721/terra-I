@@ -69,6 +69,10 @@ class KinematicComputableAssembly(Assembly):
         pass
     
     @abstractmethod
+    def retrieve_rotational_joint_torque_limit_list(self) -> list:
+        pass
+    
+    @abstractmethod
     def update_control_variable(self,
                                 control_variables:list) -> None:
         pass

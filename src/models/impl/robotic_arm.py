@@ -23,6 +23,8 @@ from utils.data_frame_utils import DataFrameUtils
 from models.enums.part_types import PartTypes
 from models.impl.reference_frame import ReferenceFrame
 from typing import Self
+from models.impl.rotational_joint import RotationalJoint
+from typing import cast
 
 class RoboticArm(KinematicComputableAssembly):
     
@@ -169,6 +171,15 @@ class RoboticArm(KinematicComputableAssembly):
             if part["entity"].type in [PartTypes.ROTATIONAL_JOINT]:
                 control_variable_list.append(part["entity"].control_variable)
         return control_variable_list
+    
+    def retrieve_rotational_joint_torque_limit_list(self) -> list:
+        torque_limit_list = []
+        part_list = self.parts["entity"].tolist()
+        for part in part_list:
+            if part.type == PartTypes.ROTATIONAL_JOINT:
+                part = cast(RotationalJoint, part)
+                torque_limit_list.append(part.torque_limit)
+        return torque_limit_list
     
     def update_pose_matrix(self,
                            pose_matrixs:dict) -> None:

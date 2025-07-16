@@ -41,13 +41,13 @@ L_LISTEN_LIST = [
 ]
 GROUND = Ground()
 LEFT_ARM = RoboticArm()\
-    .construct(Link("l-link_0-0", np.array([0, 0, 110])))\
-    .construct(RotationalJoint("la-j1", np.array([0, 1, 0]), initial_control_variable = 0))\
-    .construct(Link("l-link_1-0", np.array([0, -85, 0])))\
+    .construct(Link("l-link_0-0", np.array([0.000000, 0.000000, 0.110000])))\
+    .construct(RotationalJoint("la-j1", np.array([0, 1, 0]), initial_control_variable = pi/6))\
+    .construct(Link("l-link_1-0", np.array([0.000000, -0.085000, 0.000000])))\
     .construct(RotationalJoint("la-j2", np.array([0, 0, 1]), initial_control_variable = 0))\
-    .construct(Link("l-link_2-2", np.array([85, 0, 0])))\
+    .construct(Link("l-link_2-2", np.array([0.085000, 0.000000, 0.000000])))\
     .construct(RotationalJoint("la-j3", np.array([0, 0, 1]), initial_control_variable = 0))\
-    .construct(Link("l-link_3-0", np.array([85, 0, 0])))
+    .construct(Link("l-link_3-0", np.array([0.085000, 0.000000, 0.000000])))
 L_CONTROLLER = SimulationController(LEFT_ARM, control_interval = CONTROL_INTERVAL)\
     .initialize()\
     .bind_inverse_kinematic_analysis_basis(L_INVERSE_KINEMATIC_ANALYSIS_BASIS)

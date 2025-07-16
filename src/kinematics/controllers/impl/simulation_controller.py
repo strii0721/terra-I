@@ -27,7 +27,7 @@ import numpy as np
 import time
 from typing import Callable
 from utils.spatial_utils import SpatialUtils
-from math import pi
+from kinematics.utils.dynamics_utils import DynamicUtils
 
 class SimulationController(BaseController):
     
@@ -36,6 +36,7 @@ class SimulationController(BaseController):
                  control_interval:float = 0.1):
         self.control_object = control_object
         self.control_interval = control_interval
+        self.torque_limit_list = []
         
     @property
     def control_object(self) -> KinematicComputableAssembly:
@@ -59,6 +60,7 @@ class SimulationController(BaseController):
         self.control_object.initialize()
         initial_control_variables = self.control_object.retrive_control_variable_list()
         self.standard_input(initial_control_variables)
+        self.torque_limit_list = self.control_object.retrieve_rotational_joint_torque_limit_list()
         return self
     
     def standard_input(self,
@@ -101,8 +103,7 @@ class SimulationController(BaseController):
                                                           target_pose_matrix, 
                                                           mode = mode,
                                                           enable_log = enable_log)
-                if not self.validate_trajectory(trajectory):
-                    raise Exception("Exceeding angle restrictions...")
+                trajectory = self.fulfill_trajectory(trajectory)
                 logger.info(f"Moving to target...")
                 reachable = True
                 self.trajectory_input(trajectory)
@@ -295,14 +296,35 @@ class SimulationController(BaseController):
             
         return self
     
-    def validate_trajectory(self,
-                            trajectory:list) -> bool:
-        for control_variable_list in trajectory:
-            valid_input = self.validate_input(control_variable_list)
-            if not valid_input:
-                return False
-        return True
+    def check_trajectory(self, 
+                         trajectory:list) -> int:
+        invalid_control_loop_index = 0
+        for control_loop_index, control_variable_list in enumerate(trajectory):
+            if control_loop_index >= 1 and control_loop_index <= len(trajectory) -2:
+                inertia_list = DynamicUtils.calculate_inertia_list(self.control_object,
+                                                                   control_variable_list)
+                angular_acceleration_list = DynamicUtils.calculate_angular_acceleration_list(self.control_interval,
+                                                                                             trajectory[control_loop_index-1],
+                                                                                             trajectory[control_loop_index],
+                                                                                             trajectory[control_loop_index+1])
+                torque_list = [I * w for I, w in zip(inertia_list, angular_acceleration_list)]
+                for joint_index, torque in enumerate(torque_list):
+                    print(torque_list)
+                    if torque > self.torque_limit_list[joint_index]:
+                        invalid_control_loop_index = control_loop_index
+                        return invalid_control_loop_index
+        return invalid_control_loop_index
     
-    def validate_input(self,
-                       control_variable_list:list):
-        return True
+    def fulfill_trajectory(self, 
+                           trajectory:list) -> list:
+        invalid_control_loop_index = self.check_trajectory(trajectory)
+        while invalid_control_loop_index != 0:
+            previous_control_variable_list = np.array(trajectory[invalid_control_loop_index - 1])
+            current_control_variable_list = np.array(trajectory[invalid_control_loop_index])
+            next_control_variable_list = np.array(trajectory[invalid_control_loop_index + 1])
+            pre_insert = ((previous_control_variable_list + current_control_variable_list) / 2).tolist()
+            post_insert = ((current_control_variable_list + next_control_variable_list) / 2).tolist()
+            trajectory.insert(invalid_control_loop_index + 1, post_insert)
+            trajectory.insert(invalid_control_loop_index, pre_insert)
+            invalid_control_loop_index = self.check_trajectory(trajectory)
+        return trajectory

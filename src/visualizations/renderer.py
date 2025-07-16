@@ -35,12 +35,12 @@ class Renderer:
         self.fig = plt.figure()
         self.fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
         self.ax = cast(Axes3D,self.fig.add_subplot(111, projection='3d'))
-        self.max_x_min = -250
-        self.min_x_max = 550
-        self.max_y_min = -100
-        self.min_y_max = 300
-        self.max_z_min = -20
-        self.min_z_max = 400
+        self.max_x_min = -0.250000
+        self.min_x_max = 0.550000
+        self.max_y_min = -0.100000
+        self.min_y_max = 0.300000
+        self.max_z_min = -0.020000
+        self.min_z_max = 0.400000
         
         plt.ion()
         

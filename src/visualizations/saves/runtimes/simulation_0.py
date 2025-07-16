@@ -72,12 +72,12 @@ THREAD_LIST = [
                                                            KinematicUtils.tp_linear_joint_interpolation,
                                                            "full",
                                                            True,
-                                                           True)),
-    Thread(target = CFG.R_CONTROLLER.route_input, args = (r_target_pose_matrix_list,
-                                                           KinematicUtils.tp_linear_joint_interpolation,
-                                                           "full",
-                                                           True,
-                                                           False))
+                                                           False)),
+    # Thread(target = CFG.R_CONTROLLER.route_input, args = (r_target_pose_matrix_list,
+    #                                                        KinematicUtils.tp_linear_joint_interpolation,
+    #                                                        "full",
+    #                                                        True,
+    #                                                        False))
 ]
 def FRAME():
     CFG.RENDERER.clean_points()

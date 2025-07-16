@@ -26,12 +26,17 @@ class RotationalJoint(Joint):
                  name:str,
                  rotation_direction:np.typing.NDArray,
                  initial_control_variable:float = 0,
+                 mass:float = 0,
+                 torque_limit:float = -1,
                  visibility:bool = True):
         self.name = name
         self.type = PartTypes.ROTATIONAL_JOINT
         self.rotation_direction = rotation_direction
         self.control_variable = initial_control_variable
+        self.mass = mass
+        self.torque_limit = torque_limit
         self.visibility = visibility
+        
         
     @property
     def name(self) -> str:
