@@ -23,12 +23,12 @@ class Part(ABC):
     
     @property
     @abstractmethod
-    def name(self) -> str:
+    def index(self) -> str:
         pass
     
-    @name.setter
+    @index.setter
     @abstractmethod
-    def name(self, 
+    def index(self, 
              value:str) -> None:
         pass
     

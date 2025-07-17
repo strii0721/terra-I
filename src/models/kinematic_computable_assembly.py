@@ -69,7 +69,16 @@ class KinematicComputableAssembly(Assembly):
         pass
     
     @abstractmethod
-    def retrieve_rotational_joint_torque_limit_list(self) -> list:
+    def retrieve_rotational_joint_torque_limit_dict(self) -> dict:
+        pass
+    
+    @abstractmethod
+    def retrieve_parts_entity(self) -> list:
+        pass
+    
+    @abstractmethod
+    def retrieve_parts_entity_in_type(self,
+                                      type_list:list) -> list:
         pass
     
     @abstractmethod

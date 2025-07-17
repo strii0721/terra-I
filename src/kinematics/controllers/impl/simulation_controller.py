@@ -38,8 +38,9 @@ class SimulationController(BaseController):
                  gravity_impact_factor:float = 0):
         self.control_object = control_object
         self.control_interval = control_interval
-        self.torque_limit_list = []
+        self.rotational_joint_torque_limit_dict = {}
         self.gravity_impact_factor = gravity_impact_factor
+        self.input_history = []
         
     @property
     def control_object(self) -> KinematicComputableAssembly:
@@ -63,7 +64,7 @@ class SimulationController(BaseController):
         self.control_object.initialize()
         initial_control_variables = self.control_object.retrive_control_variable_list()
         self.standard_input(initial_control_variables)
-        self.torque_limit_list = self.control_object.retrieve_rotational_joint_torque_limit_list()
+        self.rotational_joint_torque_limit_dict = self.control_object.retrieve_rotational_joint_torque_limit_dict()
         return self
     
     def standard_input(self,
@@ -73,6 +74,12 @@ class SimulationController(BaseController):
                                                                       normalized_control_variable_list)
         self.control_object.update_control_variable(normalized_control_variable_list)
         self.control_object.update_pose_matrix(pose_matrixs_dict)
+        if len(self.input_history) < 3:
+            self.input_history.append(control_variable_list)
+        else:
+            for i in range(2):
+                self.input_history[i] = self.input_history[i+1]
+            self.input_history[2] = control_variable_list
         
     def delta_input(self,
                     delta_control_variable_list:list) -> None:
@@ -82,6 +89,7 @@ class SimulationController(BaseController):
         
     def trajectory_input(self,
                          trajectory:list) -> None:
+        self.input_history = []
         for control_variable_list in trajectory:
             self.standard_input(control_variable_list)
             time.sleep(self.control_interval)        
@@ -171,6 +179,30 @@ class SimulationController(BaseController):
         control_variable_list = self.control_object.retrieve_control_variable_list()
         return control_variable_list
     
+    def angular_accellerate_output(self,
+                                   control_variable_history:list) -> dict:
+        angular_accellerate_dict = {}
+        alpha_list = DynamicUtils.calculate_angular_acceleration_list(self.control_interval,
+                                                                      control_variable_history[0],
+                                                                      control_variable_history[1],
+                                                                      control_variable_history[2])
+        rotational_joint_list = self.control_object.retrieve_parts_entity_in_type([PartTypes.ROTATIONAL_JOINT])
+        for index, rotational_joint in enumerate(rotational_joint_list):
+            angular_accellerate_dict[rotational_joint.index] = alpha_list[index]
+        return angular_accellerate_dict
+        
+    def torque_output(self,
+                      control_variable_history:list) -> dict:
+        torque_dict = {}
+        alpha_dict = self.angular_accellerate_output(control_variable_history)
+        inertia_dict = DynamicUtils.calculate_inertia_dict(self.control_object,
+                                                           control_variable_history[-2])
+        gravity_torque_dict = DynamicUtils.calculate_gravity_torque_dict(self._control_object,
+                                                                         control_variable_history[-2])
+        for _, joint_index in enumerate(gravity_torque_dict):
+            torque_dict[joint_index] = inertia_dict[joint_index] * alpha_dict[joint_index] + gravity_torque_dict[joint_index]
+        return torque_dict
+    
     def listen(self,
                listened_object_names:list) -> None:
         """Listen to pose information of a given object and print it in the terminal.
@@ -199,18 +231,23 @@ class SimulationController(BaseController):
                 self.control_object.reference_frames["entity"],
                 self.control_object.reference_frames["pose_matrix"])
         }
+        rotational_joint_acceleration_dict = {}
+        rotational_joint_torque_dict = {}
+        if len(self.input_history) == 3:
+            rotational_joint_acceleration_dict = self.angular_accellerate_output(self.input_history)
+            rotational_joint_torque_dict = self.torque_output(self.input_history)
         os.system('cls' if os.name == 'nt' else 'clear')
         logger.info(f"      ==   Kinematic Simulation System  ==")
         logger.info(f"")
         logger.info(f"Author: strii0721       SING PRAISE TO THE GOD OF ALL MACHINES!")
         logger.info(f"")
         logger.info(f"===========================================================")
-        for name in listened_object_names:
-            entity = objects[name][0]
-            po_matix = objects[name][1]
+        for index in listened_object_names:
+            entity = objects[index][0]
+            po_matix = objects[index][1]
             x, y, z = KinematicUtils.calculate_position_from_pose_matrix(po_matix)
             x_vector, y_vector, z_vector = KinematicUtils.calculate_orientation_from_pose_matrix(po_matix)
-            logger.info(f"Name: {name}")
+            logger.info(f"Name: {index}")
             logger.info(f"Position: x = {x:.6f}    y = {y:.6f}    z = {z:.6f}")
             logger.info(f"Orientation:")
             logger.info(f" - X-Axis: {np.round(x_vector, decimals=6)}")
@@ -219,6 +256,9 @@ class SimulationController(BaseController):
             match entity.type:
                 case PartTypes.ROTATIONAL_JOINT:
                     logger.info(f"Current Output: {entity.control_variable}")
+                    if len(rotational_joint_torque_dict) != 0:
+                        logger.info(f"Anuglar Acceleration at Last Frame: {rotational_joint_acceleration_dict[index]}")
+                        logger.info(f"Torque Output at Last Frame: {rotational_joint_torque_dict[index]}")
                 case _:
                     pass
             logger.info(f"------------------------------------------------")
@@ -237,46 +277,7 @@ class SimulationController(BaseController):
         
         logger = Log4P()
         while True:
-            objects = {
-                name: (entity, po_matrix)
-                for name, entity, po_matrix in zip(
-                    self.control_object.parts["index"],
-                    self.control_object.parts["entity"],
-                    self.control_object.parts["pose_matrix"])
-            }
-
-            objects = objects | {
-                name: (entity, po_matrix)
-                for name, entity, po_matrix in zip(
-                    self.control_object.reference_frames["index"],
-                    self.control_object.reference_frames["entity"],
-                    self.control_object.reference_frames["pose_matrix"])
-            }
-        
-            os.system('cls' if os.name == 'nt' else 'clear')
-            logger.info(f"      ==   Kinematic Simulation System  ==", True)
-            logger.info(f"", True)
-            logger.info(f"Author: strii0721       SING PRAISE TO THE GOD OF ALL MACHINES!", True)
-            logger.info(f"", True)
-            logger.info(f"===========================================================", True)
-            for name in listened_object_names:
-                entity = objects[name][0]
-                pose_matix = objects[name][1]
-                x, y, z = KinematicUtils.calculate_position_from_pose_matrix(pose_matix)
-                x_vector, y_vector, z_vector = KinematicUtils.calculate_orientation_from_pose_matrix(pose_matix)
-                logger.info(f"Name: {name}", True)
-                logger.info(f"Position: x = {x:.6f}    y = {y:.6f}    z = {z:.6f}", True)
-                logger.info(f"Orientation:", True)
-                logger.info(f" - X-Axis: {np.round(x_vector, decimals=6)}", True)
-                logger.info(f" - Y-Axis: {np.round(y_vector, decimals=6)}", True)
-                logger.info(f" - Z-Axis: {np.round(z_vector, decimals=6)}", True)
-                match entity.type:
-                    case PartTypes.ROTATIONAL_JOINT:
-                        logger.info(f"Current Output: {entity.control_variable}")
-                    case _:
-                        pass
-                logger.info(f"------------------------------------------------", True)
-            logger.info(f"===========================================================")
+            self.listen(listened_object_names)
             time.sleep(self.control_interval)
         
     def bind_inverse_kinematic_analysis_basis(self,
@@ -302,22 +303,26 @@ class SimulationController(BaseController):
     def check_trajectory(self, 
                          trajectory:list) -> list:
         invalid_control_loop_index_list = []
+        rotation_torque_dict = {}
+        torque_dict = {}
         for control_loop_index, control_variable_list in enumerate(trajectory):
             if control_loop_index >= 1 and control_loop_index <= len(trajectory) -2:
-                inertia_list = DynamicUtils.calculate_inertia_list(self.control_object,
+                inertia_dict = DynamicUtils.calculate_inertia_dict(self.control_object,
                                                                    control_variable_list)
                 angular_acceleration_list = DynamicUtils.calculate_angular_acceleration_list(self.control_interval,
                                                                                              trajectory[control_loop_index-1],
                                                                                              trajectory[control_loop_index],
                                                                                              trajectory[control_loop_index+1])
-                rotation_torque_list = [I * w for I, w in zip(inertia_list, angular_acceleration_list)]
-                gravity_torque_list = DynamicUtils.calculate_gravity_torque_list(self.control_object,
+                for index,  joint_index in enumerate(inertia_dict.keys()):
+                    rotation_torque_dict[joint_index] = inertia_dict[joint_index] * angular_acceleration_list[index]
+                gravity_torque_dict = DynamicUtils.calculate_gravity_torque_dict(self.control_object,
                                                                                  control_variable_list,
                                                                                  impact_factor = self.gravity_impact_factor)
-                torque_list = [rotation_torque + gravity_torque for rotation_torque, gravity_torque in zip(rotation_torque_list, gravity_torque_list)]
-                for joint_index, torque in enumerate(torque_list):
-                    if torque > self.torque_limit_list[joint_index]:
-                        invalid_control_loop_index_list.append((control_loop_index, gravity_torque_list, inertia_list))
+                for joint_index in rotation_torque_dict:
+                    torque_dict[joint_index] = rotation_torque_dict[joint_index] + gravity_torque_dict[joint_index]
+                for joint_index, torque in torque_dict.items():
+                    if torque > self.rotational_joint_torque_limit_dict[joint_index]:
+                        invalid_control_loop_index_list.append((control_loop_index, gravity_torque_dict, inertia_dict))
         return invalid_control_loop_index_list
     
     def fulfill_trajectory(self, 
@@ -328,14 +333,15 @@ class SimulationController(BaseController):
             offset = 0
             for invalid_loop in invalid_loop_list:
                 invalid_loop_index = invalid_loop[0] + offset
-                gravity_torque_list = invalid_loop[1]
-                inertia_list = invalid_loop[2]
-                alpha = ((np.array(self.torque_limit_list) - np.array(gravity_torque_list)) / np.array(inertia_list))
+                gravity_torque_list = list(invalid_loop[1].values())
+                inertia_list = list(invalid_loop[2].values())
+                torque_limit_list = list(self.rotational_joint_torque_limit_dict.values())
+                alpha_limit_list = ((np.array(torque_limit_list) - np.array(gravity_torque_list)) / np.array(inertia_list))
                 previous_control_variable_list = np.array(trajectory[invalid_loop_index - 1])
                 current_control_variable_list = np.array(trajectory[invalid_loop_index])
                 
                 delta_control_variable_list = np.abs(current_control_variable_list - previous_control_variable_list) / pi * 180
-                delta_control_variable_list_max = 0.5 * alpha * self.control_interval**2
+                delta_control_variable_list_max = 0.5 * alpha_limit_list * self.control_interval**2
                 
                 step_num_list = delta_control_variable_list / delta_control_variable_list_max
                 

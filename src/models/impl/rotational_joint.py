@@ -29,7 +29,7 @@ class RotationalJoint(Joint):
                  mass:float = 0,
                  torque_limit:float = -1,
                  visibility:bool = True):
-        self.name = name
+        self.index = name
         self.type = PartTypes.ROTATIONAL_JOINT
         self.rotation_direction = rotation_direction
         self.control_variable = initial_control_variable
@@ -39,11 +39,11 @@ class RotationalJoint(Joint):
         
         
     @property
-    def name(self) -> str:
+    def index(self) -> str:
         return self._name
     
-    @name.setter
-    def name(self, 
+    @index.setter
+    def index(self, 
              value:str) -> None:
         self._name = value
     

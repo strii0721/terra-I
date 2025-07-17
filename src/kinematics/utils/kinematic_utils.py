@@ -456,7 +456,7 @@ class KinematicUtils:
         if is_recachable:
             start_control_variable_list = control_object.retrieve_control_variable_list()
             end_control_variable_list = result
-            trajectory = []
+            trajectory = [start_control_variable_list]
             delta_control_variables_list = [end - start for end, start in zip(end_control_variable_list, start_control_variable_list)]
             delta_control_variables_list = [delta / step_num for delta in delta_control_variables_list]
             for i in range(step_num):

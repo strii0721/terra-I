@@ -180,8 +180,8 @@ class DynamicUtils():
         return torque * impact_factor
     
     @staticmethod
-    def calculate_inertia_list(control_object:KinematicComputableAssembly,
-                               control_variable_list:list) -> list:
+    def calculate_inertia_dict(control_object:KinematicComputableAssembly,
+                               control_variable_list:list) -> dict:
         """Calcule inertia on each rotational joint with given input control variable list.
 
         Args:
@@ -189,10 +189,10 @@ class DynamicUtils():
             control_variable_list (list): Input control variable list.
 
         Returns:
-            list: Inertia list on each joint.
+            dict: Inertia list on each joint.
         """        
         
-        inertia_list = []
+        inertia_dict = {}
         pose_matrix_dict = KinematicUtils.calculate_pose_matrix_dict(control_object, 
                                                                      control_variable_list)
         part_index_list = control_object.retrieve_part_index_list()
@@ -230,13 +230,13 @@ class DynamicUtils():
                                                                                    coordinate_current,
                                                                                    part_subsequent.mass)
                                 coordinate_last = coordinate_current
-                    inertia_list.append(inertia)
-        return inertia_list
+                    inertia_dict[part.index] = inertia
+        return inertia_dict
     
     @staticmethod
-    def calculate_gravity_torque_list(control_object:KinematicComputableAssembly, 
+    def calculate_gravity_torque_dict(control_object:KinematicComputableAssembly, 
                                       control_variable_list:list,
-                                      impact_factor:float = 0) -> list:
+                                      impact_factor:float = 0) -> dict:
         """Calcule gravity torque on each rotational joint with given input control variable list.
 
         Args:
@@ -244,10 +244,10 @@ class DynamicUtils():
             control_variable_list (list): Input control variable list.
 
         Returns:
-            list: Gravity torque list on each joint.
+            dict: Gravity torque list on each joint.
         """        
         
-        gravity_torque_list = []
+        gravity_torque_dict = {}
         pose_matrix_dict = KinematicUtils.calculate_pose_matrix_dict(control_object, 
                                                                      control_variable_list)
         part_index_list = control_object.retrieve_part_index_list()
@@ -287,5 +287,5 @@ class DynamicUtils():
                                                                                                  part_subsequent.mass,
                                                                                                  impact_factor = impact_factor)
                                 coordinate_last = coordinate_current
-                    gravity_torque_list.append(gravity_torque)
-        return gravity_torque_list
+                    gravity_torque_dict[part.index] = gravity_torque
+        return gravity_torque_dict

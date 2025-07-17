@@ -28,7 +28,7 @@ class Link(Part):
                  rho = 0,
                  sectional_area:float = 0,
                  visibility:bool = True):
-        self.name = name
+        self.index = name
         self.type = PartTypes.LINK
         self.endpoint_vector = endpoint_vector
         self.rho = rho
@@ -36,11 +36,11 @@ class Link(Part):
         self.visibility = visibility
     
     @property
-    def name(self) -> str:
+    def index(self) -> str:
         return self._name
     
-    @name.setter
-    def name(self, 
+    @index.setter
+    def index(self, 
              value:str) -> None:
         self._name = value
     

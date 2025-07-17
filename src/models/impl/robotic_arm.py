@@ -100,11 +100,11 @@ class RoboticArm(KinematicComputableAssembly):
         Returns:
             Configuration: Returns the current instance for chained calls.
         """
-        name = part.name
-        existed_name_list = self.retrieve_part_index_list()
-        if name in existed_name_list:
+        index = part.index
+        existed_index_list = self.retrieve_part_index_list()
+        if index in existed_index_list:
             raise Exception("Name conflict...")
-        new_row = {"index": name, "entity": part, "pose_matrix": None}
+        new_row = {"index": index, "entity": part, "pose_matrix": None}
         self.parts = DataFrameUtils.append(self.parts, new_row)
         return self
         
@@ -172,15 +172,29 @@ class RoboticArm(KinematicComputableAssembly):
                 control_variable_list.append(part["entity"].control_variable)
         return control_variable_list
     
-    def retrieve_rotational_joint_torque_limit_list(self) -> list:
-        torque_limit_list = []
+    def retrieve_rotational_joint_torque_limit_dict(self) -> dict:
+        torque_limit_dict = {}
         part_list = self.parts["entity"].tolist()
         for part in part_list:
             if part.type == PartTypes.ROTATIONAL_JOINT:
                 part = cast(RotationalJoint, part)
-                torque_limit_list.append(part.torque_limit)
-        return torque_limit_list
+                torque_limit_dict[part.index] = part.torque_limit
+        return torque_limit_dict
     
+    def retrieve_parts_entity(self) -> list:
+        part_list = self.parts["entity"].tolist()
+        return part_list
+    
+    def retrieve_parts_entity_in_type(self,
+                                      type_list:list) -> list:
+        part_entity_in_type = []
+        part_list = self.retrieve_parts_entity()
+        for part in part_list:
+            type = part.type
+            if type in type_list:
+                part_entity_in_type.append(part)
+        return part_entity_in_type
+            
     def update_pose_matrix(self,
                            pose_matrixs:dict) -> None:
         part_names = self.retrieve_part_index_list()
