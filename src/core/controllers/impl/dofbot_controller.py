@@ -21,6 +21,8 @@ from Arm_Lib import Arm_Device
 from typing import Self
 from math import pi
 import csv
+import numpy as np
+import cv2
 
 class DofbotController():
     
@@ -102,4 +104,29 @@ class DofbotController():
             control_variable_list.append(angle_radian)
             
         return control_variable_list
-        
+    
+    def image_output(self, 
+                     backend = cv2.CAP_V4L2) -> np.typing.NDArray | None:
+        """Get current frame from camera.
+
+        Args:
+            backend (_type_, optional): Camera backend. Defaults to cv2.CAP_V4L2.
+
+        Returns:
+            np.typing.NDArray | None: Image in Numpy array format.
+        """              
+        image = cv2.VideoCapture(0, backend)
+        ret, frame = image.read()
+        if ret: return frame
+        else: return None
+    
+    def save_image(self, 
+                   image_array:np.typing.NDArray, 
+                   save_path:str) -> None:
+        """Save image to file. Default format is BMP.
+
+        Args:
+            image_array (np.typing.NDArray): Image in Numpy array format.
+            save_path (str): Path to image file.
+        """        
+        cv2.imwrite(save_path, image_array)
