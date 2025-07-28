@@ -27,16 +27,32 @@ class DofbotController():
     def __init__(self,
                  control_interval:float = 0.5,
                  initial_control_variable_list:list = [pi/2, pi/2, pi/2, pi/2, pi/2, pi/2]) -> None:
+        """Construction method.
+
+        Args:
+            control_interval (float, optional): Control interval, in seconds. Defaults to 0.5.
+            initial_control_variable_list (list, optional): Initial control variables. Defaults to [pi/2, pi/2, pi/2, pi/2, pi/2, pi/2].
+        """        
         self.control_object =  Arm_Device()
         self.control_interval = control_interval
         self.initial_control_variable_list = initial_control_variable_list
     
     def initialize(self) -> Self:
+        """Initialize robotic arm.
+
+        Returns:
+            Self: For chained calls.
+        """        
         self.standard_input(self.initial_control_variable_list)
         return self
     
     def standard_input(self,
                        control_variable_list:list) -> None:
+        """Read a list of control variable list and control joints to target value.
+
+        Args:
+            control_variable_list (list): Control variable list.
+        """        
         self.control_object.Arm_serial_servo_write6(180 * control_variable_list[0] / pi,
                                                     180 * control_variable_list[1] / pi,
                                                     180 * control_variable_list[2] / pi,
@@ -47,12 +63,22 @@ class DofbotController():
         
     def trajectory_input(self,
                          trajectory:list) -> None:
+        """Control robotic arm to move along a specific trajectory. Trajectory is a sequence of control variable list.
+
+        Args:
+            trajectory (list): A sequence of control variable list.
+        """        
         for control_variable_list in trajectory:
             self.standard_input(control_variable_list)
             time.sleep(self.control_interval)  
     
     def csv_input(self,
                   csv_file_path:str) -> None:
+        """Read trajectory from a csv file. Basically trajectory input.
+
+        Args:
+            csv_file_path (str): Path to the csv file.
+        """        
         trajectory = []
         with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
             reader = csv.reader(csvfile)
@@ -61,6 +87,11 @@ class DofbotController():
         self.trajectory_input(trajectory)
     
     def standard_output(self) -> list:
+        """Get current control variable list of each joints.
+
+        Returns:
+            list: A list of current control variables for each joints.
+        """        
         control_variable_list = []
         for index in range(6):
             angle_degree = self.control_object.Arm_serial_servo_read(index+1)

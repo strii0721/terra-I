@@ -36,6 +36,13 @@ class SimulationController(BaseController):
                  control_object:KinematicComputableAssembly,
                  control_interval:float = 0.1,
                  gravity_impact_factor:float = 0):
+        """Construction method.
+
+        Args:
+            control_object (KinematicComputableAssembly): Entity of controlled robotic arm.
+            control_interval (float, optional): Control interval, in seconds. Defaults to 0.1.
+            gravity_impact_factor (float, optional): A percentage value used to adjust the effect of gravity on joint torque output. Defaults to 0.
+        """        
         self.control_object = control_object
         self.control_interval = control_interval
         self.rotational_joint_torque_limit_dict = {}
@@ -61,6 +68,11 @@ class SimulationController(BaseController):
         self._control_interval = value
     
     def initialize(self) -> Self:
+        """Initialize robotic arm. Invoke initialization function in robotic arm entity first.
+
+        Returns:
+            Self: For chained calls.
+        """
         self.control_object.initialize()
         initial_control_variables = self.control_object.retrive_control_variable_list()
         self.standard_input(initial_control_variables)
@@ -69,6 +81,11 @@ class SimulationController(BaseController):
     
     def standard_input(self,
                        control_variable_list:list) -> None:
+        """Read a list of control variable list and control joints to target value.
+
+        Args:
+            control_variable_list (list): Control variable list.
+        """  
         normalized_control_variable_list = SpatialUtils.normalize_angle_list(control_variable_list)
         pose_matrixs_dict = KinematicUtils.calculate_pose_matrix_dict(self.control_object,
                                                                       normalized_control_variable_list)
@@ -83,12 +100,22 @@ class SimulationController(BaseController):
         
     def delta_input(self,
                     delta_control_variable_list:list) -> None:
+        """Control joints with a list of delta control variable.
+
+        Args:
+            delta_control_variable_list (list): A list of delta control variable.
+        """        
         current_control_variable_list = self.standard_output()
         control_variable_list = [current + delta for current, delta in zip(current_control_variable_list, delta_control_variable_list)]
         self.standard_input(control_variable_list)
         
     def trajectory_input(self,
                          trajectory:list) -> None:
+        """Control robotic arm to move along a specific trajectory. Trajectory is a sequence of control variable list.
+
+        Args:
+            trajectory (list): A sequence of control variable list.
+        """      
         self.input_history = []
         for control_variable_list in trajectory:
             self.standard_input(control_variable_list)
@@ -100,6 +127,15 @@ class SimulationController(BaseController):
                      mode:str = "full",
                      amap:bool = True,
                      enable_log:bool = False) -> None:
+        """Control robotic arm moving toward a target, trajectory generated automatically.
+
+        Args:
+            true_target_pose_matrix (np.typing.NDArray): Complete target pose matrix.
+            trajectory_generate_function (Callable): The function that generates trajectory.
+            mode (str, optional): If true target pose matrix is not reachable, shall change to positional mode. Defaults to "full".
+            amap (bool, optional): If position is not reachable, shall robotic arm try to reach target position as much as possible. Defaults to True.
+            enable_log (bool, optional): Toggle log. Defaults to False.
+        """        
         retry_delay = 5
         retry_portion = 1
         logger = Log4P()
@@ -168,6 +204,15 @@ class SimulationController(BaseController):
                     mode:str = "full",
                     amap:bool = True,
                     enable_log:bool = False) -> None:
+        """Control robotic arm moving along a sequence of target.
+
+        Args:
+            target_pose_matrix_list (list): A list of target pose matrix.
+            trajectory_generate_function (Callable): The function that generates trajectory.
+            mode (str, optional): If true target pose matrix is not reachable, shall change to positional mode. Defaults to "full".
+            amap (bool, optional): If position is not reachable, shall robotic arm try to reach target position as much as possible. Defaults to True.
+            enable_log (bool, optional): Toggle log. Defaults to False.
+        """        
         for tartget in target_pose_matrix_list:
             self.target_input(tartget,
                               trajectory_generate_function,
@@ -176,25 +221,40 @@ class SimulationController(BaseController):
                               enable_log)
             
     def standard_output(self) -> list:
+        """Get current control variable list of each joints.
+
+        Returns:
+            list: A list of current control variables for each joints.
+        """             
         control_variable_list = self.control_object.retrieve_control_variable_list()
         return control_variable_list
     
-    def angular_accellerate_output(self,
-                                   control_variable_history:list) -> dict:
-        angular_accellerate_dict = {}
+    def angular_accelleration_output(self) -> dict:
+        """Get current angular accelleration list of each joints.
+
+        Returns:
+            dict: A list of current angular accelleration list of each joints.
+        """        
+        control_variable_history = self.input_history
+        angular_accelleration_dict = {}
         alpha_list = DynamicUtils.calculate_angular_acceleration_list(self.control_interval,
                                                                       control_variable_history[0],
                                                                       control_variable_history[1],
                                                                       control_variable_history[2])
         rotational_joint_list = self.control_object.retrieve_parts_entity_in_type([PartTypes.ROTATIONAL_JOINT])
         for index, rotational_joint in enumerate(rotational_joint_list):
-            angular_accellerate_dict[rotational_joint.index] = alpha_list[index]
-        return angular_accellerate_dict
+            angular_accelleration_dict[rotational_joint.index] = alpha_list[index]
+        return angular_accelleration_dict
         
-    def torque_output(self,
-                      control_variable_history:list) -> dict:
+    def torque_output(self) -> dict:
+        """Get current torque output list of each joints.
+
+        Returns:
+            dict: A list of current torque output list of each joints.
+        """      
+        control_variable_history = self.input_history
         torque_dict = {}
-        alpha_dict = self.angular_accellerate_output(control_variable_history)
+        alpha_dict = self.angular_accelleration_output()
         inertia_dict = DynamicUtils.calculate_inertia_dict(self.control_object,
                                                            control_variable_history[-2])
         gravity_torque_dict = DynamicUtils.calculate_gravity_torque_dict(self._control_object,
@@ -234,8 +294,8 @@ class SimulationController(BaseController):
         rotational_joint_acceleration_dict = {}
         rotational_joint_torque_dict = {}
         if len(self.input_history) == 3:
-            rotational_joint_acceleration_dict = self.angular_accellerate_output(self.input_history)
-            rotational_joint_torque_dict = self.torque_output(self.input_history)
+            rotational_joint_acceleration_dict = self.angular_accelleration_output()
+            rotational_joint_torque_dict = self.torque_output()
         os.system('cls' if os.name == 'nt' else 'clear')
         logger.info(f"      ==   Kinematic Simulation System  ==")
         logger.info(f"")
@@ -269,7 +329,7 @@ class SimulationController(BaseController):
         """Listen to pose information of a given object and print it in the terminal.
     
         Args:
-            track_objects (list): Name list of objects that need to track.
+            listened_object_names (list): Name list of objects that need to track.
     
         Returns:
             None.
@@ -280,15 +340,15 @@ class SimulationController(BaseController):
             self.listen(listened_object_names)
             time.sleep(self.control_interval)
         
-    def bind_inverse_kinematic_analysis_basis(self,
-                                 names: list) -> Self:
+    def bind_inverse_kinematic_analysis_basis(self, 
+                                              names: list) -> Self:
         """Specify reference systems or components to participate in inverse kinematics analysis. This function is recommended to be called after the entire robotic arm has been constructed (using Configuration.confirm_construct()).
     
         Args:
             names (np.typing.NDArray): The names of the reference system or component that needs to participate in the inverse kinematics analysis.
     
         Returns:
-            None.
+            Self: For chained calls
         """
         
         part_names = self.control_object.retrieve_part_index_list()
@@ -302,6 +362,14 @@ class SimulationController(BaseController):
     
     def check_trajectory(self, 
                          trajectory:list) -> list:
+        """Check input trajectory if every input satisfy torque output limit of each joints.
+
+        Args:
+            trajectory (list): Trajectory to be checked.
+
+        Returns:
+            list: A valid trajectory.
+        """        
         invalid_control_loop_index_list = []
         rotation_torque_dict = {}
         torque_dict = {}
@@ -327,6 +395,14 @@ class SimulationController(BaseController):
     
     def fulfill_trajectory(self, 
                            trajectory:list) -> list:
+        """Insert intermediate values at appropriate positions in the invalid trajectory.
+
+        Args:
+            trajectory (list): Invalid trajectory
+
+        Returns:
+            list: A valid trajectory based on input trajectory
+        """        
         invalid_loop_list = self.check_trajectory(trajectory)
         
         while len(invalid_loop_list) != 0:

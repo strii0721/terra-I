@@ -1,6 +1,10 @@
 > Author: strii0721  
 > Email: strii0721@outlook.com  
 
+### 2025-07-28 
+---
+Run [dofbot_run.py](src/dofbot_run.py) in a Dofbot environment to control dofbot.
+
 ### 2025-07-12 
 ---
 Simply run [simulator](src/simulator.py) to do simulation.
