@@ -16,18 +16,18 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from kinematics.controllers.base_controller import BaseController
+from core.controllers.base_controller import BaseController
 from models.kinematic_computable_assembly import KinematicComputableAssembly
 import os
 from dk.logger.log4p import Log4P
-from kinematics.utils.kinematic_utils import KinematicUtils
+from core.utils.kinematic_utils import KinematicUtils
 from models.enums.part_types import PartTypes
 from typing import Self
 import numpy as np
 import time
 from typing import Callable
 from utils.spatial_utils import SpatialUtils
-from kinematics.utils.dynamics_utils import DynamicUtils
+from core.utils.dynamics_utils import DynamicUtils
 from math import pi
 
 class SimulationController(BaseController):

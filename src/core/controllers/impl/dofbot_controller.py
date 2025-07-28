@@ -20,23 +20,19 @@ import time
 from Arm_Lib import Arm_Device
 from typing import Self
 from math import pi
+import csv
 
 class DofbotController():
     
-    INITIAL_CONTROL_VARIABLE_LIST = [pi/2, pi/2, pi/2, pi/2, pi/2, pi/2]
-    
     def __init__(self,
-                 control_interval:float = 100.0,
-                 gravity_impact_factor:float = 0):
+                 control_interval:float = 0.5,
+                 initial_control_variable_list:list = [pi/2, pi/2, pi/2, pi/2, pi/2, pi/2]) -> None:
         self.control_object =  Arm_Device()
         self.control_interval = control_interval
-        self.rotational_joint_torque_limit_dict = {}
-        self.gravity_impact_factor = gravity_impact_factor
-        self.input_history = []
-        
+        self.initial_control_variable_list = initial_control_variable_list
     
     def initialize(self) -> Self:
-        self.standard_input(self.INITIAL_CONTROL_VARIABLE_LIST)
+        self.standard_input(self.initial_control_variable_list)
         return self
     
     def standard_input(self,
@@ -47,7 +43,22 @@ class DofbotController():
                                                     180 * control_variable_list[3] / pi,
                                                     180 * control_variable_list[4] / pi,
                                                     180 * control_variable_list[5] / pi,
-                                                    self.control_interval)
+                                                    int(self.control_interval/1000))
+        
+    def trajectory_input(self,
+                         trajectory:list) -> None:
+        for control_variable_list in trajectory:
+            self.standard_input(control_variable_list)
+            time.sleep(self.control_interval)  
+    
+    def csv_input(self,
+                  csv_file_path:str) -> None:
+        trajectory = []
+        with open(csv_file_path, newline='', encoding='utf-8') as csvfile:
+            reader = csv.reader(csvfile)
+            for row in reader:
+                trajectory.append(row)
+        self.trajectory_input(trajectory)
     
     def standard_output(self) -> list:
         control_variable_list = []
