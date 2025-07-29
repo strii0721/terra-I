@@ -29,18 +29,25 @@ def main():
     #     control_variable_list = dofbot_controller.standard_output()
     #     new_control_variable_list = [rad + delta_rad for rad in control_variable_list]
     #     dofbot_controller.standard_input(new_control_variable_list)
-    dofbot_controller.csv_input
-    while True:
-        image = dofbot_controller.image_output()
-        timestamp = time.time()
-        name = f"{timestamp}-calibration.bmp"
-        dir = f"./output/calibration"
-        path = f"{dir}/{name}"
-        if image is not None: 
-            dofbot_controller.save_image(image, path)
-            cv2.imshow('Image Window', image)
-            cv2.waitKey(500)
-        
+    # while True:
+    #     image = dofbot_controller.image_output()
+    #     timestamp = time.time()
+    #     name = f"{timestamp}-calibration.bmp"
+    #     dir = f"./output/calibration"
+    #     path = f"{dir}/{name}"
+    #     if image is not None: 
+    #         dofbot_controller.save_image(image, path)
+    #         cv2.imshow('Image Window', image)
+    #         cv2.waitKey(500)
+    image = dofbot_controller.image_output()
+    timestamp = time.time()
+    name = f"{timestamp}-calibration.bmp"
+    dir = f"./output/calibration"
+    path = f"{dir}/{name}"
+    if image is not None: 
+        dofbot_controller.save_image(image, path)
+        cv2.imshow('Image Window', image)
+        cv2.waitKey(500)
     print("Program ended! ")
 
 try:

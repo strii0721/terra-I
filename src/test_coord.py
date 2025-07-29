@@ -16,7 +16,7 @@ dist_coeffs = np.array([-0.32, 0.11, 0, 0, 0], dtype=np.float32)
 focal_length = fx  # assume fx and fy ~ equal
 
 # === Load Test Image ===
-image_path = "resources/coord_test_single/1753797385.2301164-calibration.bmp"
+image_path = "output/calibration/1753802979.5773597-calibration.bmp"
 # image_path = "resources/coord_test_single/coord_test.jpg"
 frame = cv2.imread(image_path)
 image_size = (frame.shape[1], frame.shape[0])
