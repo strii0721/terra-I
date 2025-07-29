@@ -23,7 +23,7 @@ import numpy as np
 from visualizations.renderer import Renderer
 from models.impl.hull import Hull
 from math import pi
-from kinematics.controllers.impl.simulation_controller import SimulationController
+from core.controllers.impl.simulation_controller import SimulationController
 from models.impl.target_point import TargetPoint
 
 CONTROL_INTERVAL = 0.1
