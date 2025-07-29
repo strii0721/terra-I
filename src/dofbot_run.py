@@ -17,14 +17,25 @@
 #
 
 from core.controllers.impl.dofbot_controller import DofbotController
+import time
+import cv2
 from math import pi
-
 
 def main():
     dofbot_controller = DofbotController()
-    dofbot_controller.initialize()
-    image = dofbot_controller.image_output()
-    if image is not None: dofbot_controller.save_image(image, "resources/demo.bmp")
+    # dofbot_controller.initialize()
+    dofbot_controller.standard_input([pi/2, pi/2, pi/2, 0, pi/2, pi/2])
+    while True:
+        image = dofbot_controller.image_output()
+        timestamp = time.time()
+        name = f"{timestamp}-calibration.bmp"
+        dir = f"./output/calibration"
+        path = f"{dir}/{name}"
+        if image is not None: 
+            dofbot_controller.save_image(image, path)
+            cv2.imshow('Image Window', image)
+            cv2.waitKey(500)
+        
     print("Program ended! ")
 
 try:
