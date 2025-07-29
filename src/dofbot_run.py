@@ -17,12 +17,14 @@
 #
 
 from core.controllers.impl.dofbot_controller import DofbotController
+from threading import Thread
 import time
 import cv2
 from math import pi
+from core.comm.tcp_client import TcpClient
 
 def main():
-    dofbot_controller = DofbotController()
+    dofbot_controller = DofbotController(control_interval = 1)
     # dofbot_controller.initialize()
     # for i in range(45):
     #     delta_rad = pi/180
@@ -39,17 +41,14 @@ def main():
     #         dofbot_controller.save_image(image, path)
     #         cv2.imshow('Image Window', image)
     #         cv2.waitKey(500)
-    image = dofbot_controller.image_output()
-    timestamp = time.time()
-    name = f"{timestamp}-calibration.bmp"
-    dir = f"./output/calibration"
-    path = f"{dir}/{name}"
-    if image is not None: 
-        dofbot_controller.save_image(image, path)
-        cv2.imshow('Image Window', image)
-        cv2.waitKey(500)
-    print("Program ended! ")
-
+    tcp_client = TcpClient()
+    tcp_service = Thread(target = tcp_client.listen, 
+                         args = ())
+    tcp_service.start()
+    while True:
+        control_variable_list = tcp_client.read()
+        dofbot_controller.standard_input(control_variable_list)
+        
 try:
     main()
 except KeyboardInterrupt:
