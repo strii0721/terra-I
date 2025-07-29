@@ -62,6 +62,7 @@ class DofbotController():
                                                     180 * control_variable_list[4] / pi,
                                                     180 * control_variable_list[5] / pi,
                                                     int(self.control_interval/1000))
+        time.sleep(self.control_interval)
         
     def trajectory_input(self,
                          trajectory:list) -> None:
@@ -72,7 +73,6 @@ class DofbotController():
         """        
         for control_variable_list in trajectory:
             self.standard_input(control_variable_list)
-            time.sleep(self.control_interval)  
     
     def csv_input(self,
                   csv_file_path:str) -> None:
@@ -106,7 +106,7 @@ class DofbotController():
         return control_variable_list
     
     def image_output(self, 
-                     backend = cv2.CAP_V4L2) -> np.typing.NDArray | None:
+                     backend = cv2.CAP_ANY) -> np.typing.NDArray | None:
         """Get current frame from camera.
 
         Args:
@@ -115,8 +115,10 @@ class DofbotController():
         Returns:
             np.typing.NDArray | None: Image in Numpy array format.
         """              
-        image = cv2.VideoCapture(0, backend)
-        ret, frame = image.read()
+        camera = cv2.VideoCapture(1, backend)
+        ret, frame = camera.read()
+        # time.sleep(self.control_interval)
+        camera.release()
         if ret: return frame
         else: return None
     

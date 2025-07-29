@@ -17,14 +17,14 @@
 #
 
 from core.controllers.impl.dofbot_controller import DofbotController
-
+from math import pi
 
 
 def main():
     dofbot_controller = DofbotController()
     dofbot_controller.initialize()
-    trajectory_csv_fuie_path = "resources/dofbot_0.csv"
-    dofbot_controller.csv_input(trajectory_csv_fuie_path)
+    image = dofbot_controller.image_output()
+    if image is not None: dofbot_controller.save_image(image, "resources/demo.bmp")
     print("Program ended! ")
 
 try:
