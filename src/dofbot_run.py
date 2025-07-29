@@ -25,7 +25,7 @@ from core.comm.tcp_client import TcpClient
 
 def main():
     dofbot_controller = DofbotController(control_interval = 1)
-    # dofbot_controller.initialize()
+    dofbot_controller.initialize()
     # for i in range(45):
     #     delta_rad = pi/180
     #     control_variable_list = dofbot_controller.standard_output()
