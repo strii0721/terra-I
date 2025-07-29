@@ -23,18 +23,23 @@ from math import pi
 
 def main():
     dofbot_controller = DofbotController()
-    dofbot_controller.initialize()
-    dofbot_controller.standard_input([0, pi/2, pi/2, 0, pi/2, pi/2])
-    # while True:
-    #     image = dofbot_controller.image_output()
-    #     timestamp = time.time()
-    #     name = f"{timestamp}-calibration.bmp"
-    #     dir = f"./output/calibration"
-    #     path = f"{dir}/{name}"
-    #     if image is not None: 
-    #         dofbot_controller.save_image(image, path)
-    #         cv2.imshow('Image Window', image)
-    #         cv2.waitKey(500)
+    # dofbot_controller.initialize()
+    # for i in range(45):
+    #     delta_rad = pi/180
+    #     control_variable_list = dofbot_controller.standard_output()
+    #     new_control_variable_list = [rad + delta_rad for rad in control_variable_list]
+    #     dofbot_controller.standard_input(new_control_variable_list)
+    dofbot_controller.csv_input
+    while True:
+        image = dofbot_controller.image_output()
+        timestamp = time.time()
+        name = f"{timestamp}-calibration.bmp"
+        dir = f"./output/calibration"
+        path = f"{dir}/{name}"
+        if image is not None: 
+            dofbot_controller.save_image(image, path)
+            cv2.imshow('Image Window', image)
+            cv2.waitKey(500)
         
     print("Program ended! ")
 
