@@ -1,5 +1,5 @@
 % === Configuration ===
-ip = "192.168.137.45";   % RS_Pi IP
+ip = "127.0.0.1";   % RS_Pi IP
 port = 5005;
 
 % === Establish TCP Connnection ===

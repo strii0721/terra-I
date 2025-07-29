@@ -20,11 +20,11 @@ class TcpClient():
                 print(f"Connected by {addr}")
                 while True:
                     data = conn.recv(1024).decode().strip()
-                    if not data:
-                        break
                     try:
-                        contro_variable_list = [float(a) for a in data.split(',')]
-                        self.buffer.put(contro_variable_list)
+                        if not data:
+                            break
+                        control_variable_list = [float(a) for a in data.split(',')]
+                        self.buffer.put(control_variable_list)
                     except:
                         print("Invalid data:", data)
 
