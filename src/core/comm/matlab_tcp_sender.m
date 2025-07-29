@@ -13,9 +13,16 @@ angle2 = [0, pi/2, pi/2, pi/2, pi/2, pi/2];
 msg1 = sprintf('%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n', angle1);
 msg2 = sprintf('%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n', angle2);
 
+for index = 1:100
+    msg = sprintf('%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n', angle1);
+    write(t, msg1, "string");
+    fprintf("Sent: %s", msg1);
+    pause(0.1);  % Pause for 1s
+end
+
 write(t, msg1, "string");
 fprintf("Sent: %s", msg1);
-pause(1);  % Pause for 1s
+pause(0.1);  % Pause for 1s
 
 write(t, msg2, "string");
 fprintf("Sent: %s", msg2);

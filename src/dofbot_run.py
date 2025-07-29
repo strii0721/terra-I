@@ -19,6 +19,7 @@
 from core.controllers.impl.dofbot_controller import DofbotController
 from threading import Thread
 from core.comm.tcp_agent import TcpClient
+import time
 
 def main():
     dofbot_controller = DofbotController(control_interval = 1)
@@ -33,7 +34,7 @@ def main():
         control_variable_list = tcp_client.read()
         print(f"Current input: {control_variable_list}")
         dofbot_controller.standard_input(control_variable_list)
-        
+        time.sleep(1)
 try:
     main()
 except KeyboardInterrupt:
