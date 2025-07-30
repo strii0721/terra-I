@@ -48,25 +48,24 @@ class TcpAgent():
     def listen(self) -> None:
         if self.connection:
             while True:
-                data = self.connection.recv(1024).strip()
+                data = self.connection.recv(1024).decode().strip()
                 try:
                     if not data:
                         break
-                    # control_variable_list = [float(a) for a in data.split(',')]
                     self.read_buffer.put(data)
                 except:
                     logger.info("Invalid data:", data)
 
-    def read(self) -> object:
-        data = self.read_buffer.get()
+    def read(self) -> bytes:
+        data = self.read_buffer.get(timeout=0)
         return data
     
     def send(self, 
-             message: object) -> None:
+             data: bytes) -> None:
         if self.connection:
             try:
                 logger = Log4P()
-                self.connection.sendall(message.encode())
-                logger.info(f"Send data: {str(message)}")
+                self.connection.sendall(data)
+                logger.info(f"Send data: {str(data)}")
             except Exception as e:
                 print("Send failed:", e)

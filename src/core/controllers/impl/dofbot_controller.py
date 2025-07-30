@@ -106,6 +106,7 @@ class DofbotController():
         return control_variable_list
     
     def image_output(self, 
+                     camera_index:int = 0,
                      backend = cv2.CAP_V4L2) -> np.typing.NDArray | None:
         """Get current frame from camera.
 
@@ -115,7 +116,7 @@ class DofbotController():
         Returns:
             np.typing.NDArray | None: Image in Numpy array format.
         """              
-        camera = cv2.VideoCapture(0, backend)
+        camera = cv2.VideoCapture(camera_index, backend)
         ret, frame = camera.read()
         # time.sleep(self.control_interval)
         camera.release()

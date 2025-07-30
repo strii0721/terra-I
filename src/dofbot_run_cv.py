@@ -22,6 +22,13 @@ from core.comm.tcp_agent import TcpAgent
 import time
 from dk.logger.log4p import Log4P
 from math import pi
+import cv2
+import os
+
+def read_as_control_variable_list(self, 
+                                  data:bytes) -> list:
+    control_variable_list = [float(control_variable) for control_variable in data.split(',')]
+    return control_variable_list
 
 def main():
     logger = Log4P()
@@ -30,12 +37,28 @@ def main():
     logger.info(f"Robotic arm initialized...")
     time.sleep(1)
     tcp_agent = TcpAgent()
-    tcp_agent.wait()
+    # tcp_agent.wait()
+    
+    # while True:
+    #     data = tcp_agent.read()
+    #     control_variable_list = self.read_as_control_variable_list(data)
+    #     dofbot_controller.standard_input(control_variable_list)
     
     while True:
-        data = tcp_agent.read().decode()
-        print(data)
-        if data == "20": tcp_agent.send("Received!!!!!!!!!!")
+        image_left = dofbot_controller.image_output(camera_index = 1)
+        image_right = dofbot_controller.image_output(camera_index = 3)
+        cv2.imshow("Left", image_left)
+        cv2.imshow("Right", image_right)
+        cv2.waitKey(500)
+        time.sleep(0.5)
+        timestamp = time.time()
+        name = f"{timestamp}"
+        save_dir = "output/calibration/stereo_ball"
+        os.makedirs(save_dir, exist_ok=True)
+        path_left = f"{save_dir}/{name}-left.bmp"
+        path_right = f"{save_dir}/{name}-right.bmp"
+        dofbot_controller.save_image(image_left, path_left)
+        dofbot_controller.save_image(image_right, path_right)
 try:
     main()
 except KeyboardInterrupt:
