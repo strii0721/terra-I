@@ -61,8 +61,8 @@ class DofbotController():
                                                     180 * control_variable_list[3] / pi,
                                                     180 * control_variable_list[4] / pi,
                                                     180 * control_variable_list[5] / pi,
-                                                    int(self.control_interval/1000))
-        time.sleep(self.control_interval)
+                                                    int(self.control_interval))
+        time.sleep(self.control_interval/1000)
         
     def trajectory_input(self,
                          trajectory:list) -> None:

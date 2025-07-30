@@ -18,11 +18,12 @@
 
 import socket
 from queue import Queue
+from dk.logger.log4p import Log4P
 
 class TcpClient():
     
     def __init__(self,
-                 host:str = "127.0.0.1",
+                 host:str = "0.0.0.0",
                  port:int = 5005) -> None:
         self.host = host
         self.port = port
@@ -31,13 +32,15 @@ class TcpClient():
 
     def listen(self) -> None:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            logger = Log4P()
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.bind((self.host, self.port))
             s.listen(1)
-            print(f"Listening on port {self.port}...")
+            logger.info(f"Listening on port {self.port}...")
             connection, addr = s.accept()
             self.connection = connection
             with connection:
-                print(f"Connected by {addr}")
+                logger.info(f"Connected by {addr}")
                 while True:
                     data = connection.recv(1024).decode().strip()
                     try:
@@ -46,7 +49,7 @@ class TcpClient():
                         control_variable_list = [float(a) for a in data.split(',')]
                         self.read_buffer.put(control_variable_list)
                     except:
-                        print("Invalid data:", data)
+                        logger.info("Invalid data:", data)
 
     def read(self) -> list:
         control_variable_list = self.read_buffer.get()

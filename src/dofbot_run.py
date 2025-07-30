@@ -20,11 +20,16 @@ from core.controllers.impl.dofbot_controller import DofbotController
 from threading import Thread
 from core.comm.tcp_agent import TcpClient
 import time
+from dk.logger.log4p import Log4P
+from math import pi
 
 def main():
-    dofbot_controller = DofbotController(control_interval = 1)
+    logger = Log4P()
+    dofbot_controller = DofbotController(initial_control_variable_list = [pi/2, 1*pi/2, pi/2, pi/2, pi/2, pi/2])
     dofbot_controller.initialize()
-    
+    # dofbot_controller.standard_input([pi/2, pi/2 + pi/180, pi/2, pi/2, pi/2, pi/2])
+    time.sleep(1)
+    logger.info(f"Robotic arm initialized...")
     tcp_client = TcpClient()
     
     tcp_service = Thread(target = tcp_client.listen)
@@ -32,9 +37,8 @@ def main():
     tcp_service.start()
     while True:
         control_variable_list = tcp_client.read()
-        print(f"Current input: {control_variable_list}")
+        logger.info(f"Current input: {control_variable_list}")
         dofbot_controller.standard_input(control_variable_list)
-        time.sleep(1)
 try:
     main()
 except KeyboardInterrupt:
