@@ -19,46 +19,54 @@
 import socket
 from queue import Queue
 from dk.logger.log4p import Log4P
+from threading import Thread
 
-class TcpClient():
+class TcpAgent():
     
     def __init__(self,
-                 host:str = "0.0.0.0",
+                 ip:str = "0.0.0.0",
                  port:int = 5005) -> None:
-        self.host = host
+        self.ip = ip
         self.port = port
         self.read_buffer = Queue()
         self.connection = None
-
-    def listen(self) -> None:
+        
+    def wait(self) -> None:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             logger = Log4P()
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            s.bind((self.host, self.port))
+            s.bind((self.ip, self.port))
             s.listen(1)
-            logger.info(f"Listening on port {self.port}...")
+            logger.info(f"Waiting for connection on port {self.port}...")
             connection, addr = s.accept()
             self.connection = connection
-            with connection:
-                logger.info(f"Connected by {addr}")
-                while True:
-                    data = connection.recv(1024).decode().strip()
-                    try:
-                        if not data:
-                            break
-                        control_variable_list = [float(a) for a in data.split(',')]
-                        self.read_buffer.put(control_variable_list)
-                    except:
-                        logger.info("Invalid data:", data)
+            logger.info(f"Connected by {addr}, start listening...")
+            tcp_service = Thread(target = self.listen)
+            tcp_service.daemon = True
+            tcp_service.start()
 
-    def read(self) -> list:
-        control_variable_list = self.read_buffer.get()
-        return control_variable_list
+    def listen(self) -> None:
+        if self.connection:
+            while True:
+                data = self.connection.recv(1024).strip()
+                try:
+                    if not data:
+                        break
+                    # control_variable_list = [float(a) for a in data.split(',')]
+                    self.read_buffer.put(data)
+                except:
+                    logger.info("Invalid data:", data)
+
+    def read(self) -> object:
+        data = self.read_buffer.get()
+        return data
     
     def send(self, 
-             message: str) -> None:
+             message: object) -> None:
         if self.connection:
             try:
-                self.connection.sendall((message + "\n").encode())
+                logger = Log4P()
+                self.connection.sendall(message.encode())
+                logger.info(f"Send data: {str(message)}")
             except Exception as e:
                 print("Send failed:", e)

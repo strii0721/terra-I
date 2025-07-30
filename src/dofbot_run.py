@@ -18,7 +18,7 @@
 
 from core.controllers.impl.dofbot_controller import DofbotController
 from threading import Thread
-from core.comm.tcp_agent import TcpClient
+from core.comm.tcp_agent import TcpAgent
 import time
 from dk.logger.log4p import Log4P
 from math import pi
@@ -27,18 +27,15 @@ def main():
     logger = Log4P()
     dofbot_controller = DofbotController(initial_control_variable_list = [pi/2, 1*pi/2, pi/2, pi/2, pi/2, pi/2])
     dofbot_controller.initialize()
-    # dofbot_controller.standard_input([pi/2, pi/2 + pi/180, pi/2, pi/2, pi/2, pi/2])
-    time.sleep(1)
     logger.info(f"Robotic arm initialized...")
-    tcp_client = TcpClient()
+    time.sleep(1)
+    tcp_agent = TcpAgent()
+    tcp_agent.wait()
     
-    tcp_service = Thread(target = tcp_client.listen)
-    tcp_service.daemon = True
-    tcp_service.start()
     while True:
-        control_variable_list = tcp_client.read()
-        logger.info(f"Current input: {control_variable_list}")
-        dofbot_controller.standard_input(control_variable_list)
+        data = tcp_agent.read().decode()
+        print(data)
+        if data == "20": tcp_agent.send("Received!!!!!!!!!!")
 try:
     main()
 except KeyboardInterrupt:
