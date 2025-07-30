@@ -20,7 +20,7 @@ import visualizations.saves.statics.default as CFG
 from threading import Thread
 from visualizations.enums.render_object_types import RenderObjectTypes
 
-from core.utils.kinematic_utils import KinematicUtils
+from utils.kinematic_utils import KinematicUtils
 from math import pi
 
 '''

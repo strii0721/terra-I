@@ -20,14 +20,14 @@ from core.controllers.base_controller import BaseController
 from models.kinematic_computable_assembly import KinematicComputableAssembly
 import os
 from dk.logger.log4p import Log4P
-from core.utils.kinematic_utils import KinematicUtils
+from utils.kinematic_utils import KinematicUtils
 from models.enums.part_types import PartTypes
 from typing import Self
 import numpy as np
 import time
 from typing import Callable
 from utils.spatial_utils import SpatialUtils
-from core.utils.dynamics_utils import DynamicUtils
+from utils.dynamics_utils import DynamicUtils
 from math import pi
 
 class SimulationController(BaseController):
