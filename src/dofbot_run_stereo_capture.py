@@ -32,7 +32,7 @@ def main():
         image_left = dofbot_controller.image_output(camera_index = 0)
         image_right = dofbot_controller.image_output(camera_index = 2)
         timestamp = time.time()
-        save_dir_base = "output/calibration/calibration"
+        save_dir_base = "output/calibration"
         save_dir_left = f"{save_dir_base}/left"
         save_dir_right = f"{save_dir_base}/right"
         os.makedirs(save_dir_left, exist_ok =True)

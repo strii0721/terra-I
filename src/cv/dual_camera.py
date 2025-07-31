@@ -12,7 +12,7 @@ class DualCamera():
         self.distortion_left = essential_parameters["distortion_left"]
         self.distortion_right = essential_parameters["distortion_right"]
         self.rotation_matrix = essential_parameters["rotation_matrix"]
-        self.translation = essential_parameters["translation"][0] / 1000
+        self.translation = essential_parameters["translation"][0]
         self.image_size = essential_parameters["image_size"][0][::-1]
         self.R1, self.R2, self.P1, self.P2, self.Q, _, _ = cv2.stereoRectify(self.intrinsic_matrix_left, 
                                                                              self.distortion_left, 
