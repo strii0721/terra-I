@@ -1,5 +1,3 @@
-load("../../resources/stereoParams.mat");
-% K1 = stereoParams.CameraParameters1.IntrinsicMatrix';
 intrinsic_matrix_left = stereoParams.CameraParameters1.Intrinsics.K;
 intrinsic_matrix_right = stereoParams.CameraParameters2.Intrinsics.K;
 distortion_left = [stereoParams.CameraParameters1.RadialDistortion, ...
