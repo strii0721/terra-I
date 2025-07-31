@@ -28,6 +28,8 @@ from controllers.impl.dofbot_controller import DofbotController
 def main():
     logger = Log4P()
     dofbot_controller = DofbotController()
+    time.sleep(2)
+    logger.info(f"Starting...")
     for index in range(20):
         image_left = dofbot_controller.image_output(camera_index = 0)
         image_right = dofbot_controller.image_output(camera_index = 2)
