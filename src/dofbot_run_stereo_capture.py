@@ -28,22 +28,23 @@ from controllers.impl.dofbot_controller import DofbotController
 def main():
     logger = Log4P()
     dofbot_controller = DofbotController()
-    image_left = dofbot_controller.image_output(camera_index = 0)
-    image_right = dofbot_controller.image_output(camera_index = 2)
-    # timestamp = time.time()
-    # save_dir_base = "output/calibration/calibration"
-    # save_dir_left = f"{save_dir_base}/left"
-    # save_dir_right = f"{save_dir_base}/right"
-    # os.makedirs(save_dir_left, exist_ok =T rue)
-    # os.makedirs(save_dir_right, exist_ok = True)
-    # save_path_left = f"{save_dir_left}/{timestamp}-left.bmp"
-    # save_path_right = f"{save_dir_right}/{timestamp}-right.bmp"
-    # dofbot_controller.save_image(image_left, save_path_left)
-    # dofbot_controller.save_image(image_right, save_path_right)
-    # logger.info(f"Stereo image saved.")
-    cv2.imshow("Left Image", image_left)
-    cv2.imshow("Right Image", image_right)
-    cv2.waitKey(0)
+    for index in range(20):
+        image_left = dofbot_controller.image_output(camera_index = 0)
+        image_right = dofbot_controller.image_output(camera_index = 2)
+        timestamp = time.time()
+        save_dir_base = "output/calibration/calibration"
+        save_dir_left = f"{save_dir_base}/left"
+        save_dir_right = f"{save_dir_base}/right"
+        os.makedirs(save_dir_left, exist_ok =True)
+        os.makedirs(save_dir_right, exist_ok = True)
+        save_path_left = f"{save_dir_left}/{timestamp}-left.bmp"
+        save_path_right = f"{save_dir_right}/{timestamp}-right.bmp"
+        dofbot_controller.save_image(image_left, save_path_left)
+        dofbot_controller.save_image(image_right, save_path_right)
+        logger.info(f"Stereo image saved. Index: {index + 1}")
+        cv2.imshow("Left Image", image_left)
+        cv2.imshow("Right Image", image_right)
+        cv2.waitKey(2000)
 try:
     main()
 except KeyboardInterrupt:
