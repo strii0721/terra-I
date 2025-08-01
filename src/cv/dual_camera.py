@@ -20,12 +20,13 @@ import cv2
 import numpy as np
 import scipy.io
 from dk.logger.log4p import Log4P
+from utils.stereo_vision_utils import StereoVisionUtils
 
 class DualCamera():
     def __init__(self,) -> None:
         self.LOWER_BOUND_BLUE = np.array([100, 150, 50])
         self.UPPER_BOUND_BLUE = np.array([140, 255, 255])
-        essential_parameters = scipy.io.loadmat("resources/essential_parameters.mat")
+        essential_parameters = scipy.io.loadmat("resources/essential_parameters_dual.mat")
         self.intrinsic_matrix_left = essential_parameters["intrinsic_matrix_left"]
         self.intrinsic_matrix_right = essential_parameters["intrinsic_matrix_right"]
         self.distortion_left = essential_parameters["distortion_left"]
@@ -71,9 +72,9 @@ class DualCamera():
                                 image_right:np.typing.NDArray) -> tuple:
         image_left_rectified = cv2.remap(image_left.copy(), self.map_x_left, self.map_y_left, cv2.INTER_LINEAR)
         image_right_rectified = cv2.remap(image_right.copy(), self.map_x_right, self.map_y_right, cv2.INTER_LINEAR)
-        center_right = DualCamera.calculate_center(image = image_right_rectified, 
-                                                  lower_bound = self.LOWER_BOUND_BLUE, 
-                                                  upper_bound = self.UPPER_BOUND_BLUE)
+        center_right = StereoVisionUtils.calculate_center(image = image_right_rectified, 
+                                                          lower_bound = self.LOWER_BOUND_BLUE, 
+                                                          upper_bound = self.UPPER_BOUND_BLUE)
         print(f"center: {center_right}")
         gray_left = cv2.cvtColor(image_left_rectified, cv2.COLOR_BGR2GRAY)
         gray_right = cv2.cvtColor(image_right_rectified, cv2.COLOR_BGR2GRAY)
@@ -94,28 +95,4 @@ class DualCamera():
         print(f"{points_3D.shape}")
         return x, y, z
         
-    @staticmethod
-    def calculate_mask(image:np.typing.NDArray, 
-                       lower_bound:np.typing.NDArray,
-                       upper_bound:np.typing.NDArray) -> np.typing.NDArray:
-        hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(hsv, lower_bound, upper_bound)
-        return mask
     
-    @staticmethod
-    def calculate_center(image:np.typing.NDArray, 
-                         lower_bound:np.typing.NDArray,
-                         upper_bound:np.typing.NDArray) -> tuple|None:
-        mask = DualCamera.calculate_mask(image, 
-                                         lower_bound, 
-                                         upper_bound)
-
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        if contours:
-            main_contour = max(contours, key=cv2.contourArea)
-            M = cv2.moments(main_contour)
-            if M['m00'] != 0:
-                x = int(M['m10'] / M['m00'])
-                y = int(M['m01'] / M['m00'])
-                return (x, y)
-        return None
