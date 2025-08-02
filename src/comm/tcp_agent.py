@@ -19,54 +19,58 @@
 import socket
 from queue import Queue
 from dk.logger.log4p import Log4P
-from threading import Thread
+import json
+from comm.enums.state_code import StateCode
 
 class TcpAgent():
     
     def __init__(self,
-                 ip:str = "0.0.0.0",
                  port:int = 5005) -> None:
-        self.ip = ip
         self.port = port
         self.read_buffer = Queue()
         self.connection = None
         
-    def wait(self) -> None:
+    def wait_connection(self) -> None:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             logger = Log4P()
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            s.bind((self.ip, self.port))
+            s.bind(("0.0.0.0", self.port))
             s.listen(1)
             logger.info(f"Waiting for connection on port {self.port}...")
             connection, addr = s.accept()
             self.connection = connection
             logger.info(f"Connected by {addr}, start listening...")
-            tcp_service = Thread(target = self.listen)
-            tcp_service.daemon = True
-            tcp_service.start()
 
-    def listen(self) -> None:
-        logger = Log4P()
+    def receive(self) -> tuple:
         if self.connection:
-            while True:
-                data = self.connection.recv(1024).decode().strip()
-                try:
-                    if not data:
-                        break
-                    self.read_buffer.put(data)
-                except:
-                    logger.info("Invalid data:", data)
-
-    def read(self) -> bytes:
-        data = self.read_buffer.get(timeout=0)
-        return data
+            header = self.connection.recv(4)
+            length = int.from_bytes(header, 'big')
+            payload = b''
+            while len(payload) < length:
+                packet = self.connection.recv(length - len(payload))
+                if not packet:
+                    raise ConnectionError("Connection terminated.")
+                payload += packet
+            payload = payload.decode()
+            payload_dict = json.loads(payload)
+            return payload_dict["stat"], payload_dict["msg"]
     
     def send(self, 
-             data: bytes) -> None:
+             stat:StateCode,
+             msg:object) -> None:
         if self.connection:
-            try:
-                logger = Log4P()
-                self.connection.sendall(data)
-                logger.info(f"Send data: {str(data)}")
-            except Exception as e:
-                print("Send failed:", e)
+            payload_dict = {}
+            payload_dict["stat"] = stat
+            payload_dict["msg"] = msg
+            payload = json.dumps(payload_dict)
+            payload = payload.encode()
+            length = len(payload)
+            header = length.to_bytes(4, 'big')
+            self.connection.sendall(header + payload)
+            
+
+    def wait_state(self, 
+                   target_state:StateCode) -> object:
+        stat, msg = self.receive()
+        if stat == target_state:
+            return msg
