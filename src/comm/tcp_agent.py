@@ -46,6 +46,7 @@ class TcpAgent():
             tcp_service.start()
 
     def listen(self) -> None:
+        logger = Log4P()
         if self.connection:
             while True:
                 data = self.connection.recv(1024).decode().strip()

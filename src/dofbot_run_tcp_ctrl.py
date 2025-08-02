@@ -16,9 +16,9 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from core.controllers.impl.dofbot_controller import DofbotController
+from controllers.impl.dofbot_controller import DofbotController
 from threading import Thread
-from core.comm.tcp_agent import TcpAgent
+from comm.tcp_agent import TcpAgent
 import time
 from dk.logger.log4p import Log4P
 from math import pi
@@ -41,7 +41,7 @@ def main():
     
     while True:
         data = tcp_agent.read()
-        control_variable_list = self.read_as_control_variable_list(data)
+        control_variable_list = read_as_control_variable_list(data)
         dofbot_controller.standard_input(control_variable_list)
     
 try:

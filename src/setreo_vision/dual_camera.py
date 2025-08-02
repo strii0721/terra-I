@@ -23,10 +23,11 @@ from dk.logger.log4p import Log4P
 from utils.stereo_vision_utils import StereoVisionUtils
 
 class DualCamera():
-    def __init__(self,) -> None:
+    def __init__(self,
+                 essential_parameters_path:str) -> None:
         self.LOWER_BOUND_BLUE = np.array([100, 150, 50])
         self.UPPER_BOUND_BLUE = np.array([140, 255, 255])
-        essential_parameters = scipy.io.loadmat("resources/essential_parameters_dual.mat")
+        essential_parameters = scipy.io.loadmat(essential_parameters_path)
         self.intrinsic_matrix_left = essential_parameters["intrinsic_matrix_left"]
         self.intrinsic_matrix_right = essential_parameters["intrinsic_matrix_right"]
         self.distortion_left = essential_parameters["distortion_left"]

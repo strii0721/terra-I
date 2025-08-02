@@ -1,10 +1,5 @@
-clear; clc; close all;
-
-%% Load camera parameters
-load('cameraParams.mat');   % calibration file
-
 %% Setup image input
-frame = imread('/Users/apple/Documents/testen.jpeg');
+frame = imread('C:\Users\lynchpin\repository\terra-I\resources\stereo_calibration\ball\left\1754054864.6690507-left.bmp');
 frame = imresize(frame, [cameraParams.ImageSize(1), cameraParams.ImageSize(2)]);
 
 %% Known Parameters

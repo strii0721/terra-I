@@ -16,51 +16,44 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from numpy import np
+import numpy as np
 import scipy
 import cv2
 from utils.stereo_vision_utils import StereoVisionUtils
 
-class SingleCamera():
-    def __init__(self,) -> None:
+class MonocularCamera():
+    def __init__(self,
+                 essential_parameters_path:str) -> None:
         self.LOWER_BOUND_BLUE = np.array([100, 150, 50])
         self.UPPER_BOUND_BLUE = np.array([140, 255, 255])
-        essential_parameters = scipy.io.loadmat("resources/essential_parameters_single.mat")
-        self.focal_x, self.focal_y = essential_parameters["focal_length"]
-        self.focal_z = self.focal_x
-        self.principal_point_x, self.principal_point_y = essential_parameters["principal_point"]
+        essential_parameters = scipy.io.loadmat(essential_parameters_path)
+        self.focal_x = self.focal_z = essential_parameters["focal_length"][0, 0]
+        self.focal_y = essential_parameters["focal_length"][0, 1]
+        self.principal_point_x = essential_parameters["principal_point"][0, 0]
+        self.principal_point_y = essential_parameters["principal_point"][0, 1]
         self.K = essential_parameters["K"]
         self.distortion = essential_parameters["distortion"]
-        self.target_size = 50
+        self.target_size = 5
         
     
     def calculate_3d_coordinate(self,
                                 image):
-        image_undistort = cv2.undistort(image, self.K, self.distortion)
-        hsv = cv2.cvtColor(image_undistort, cv2.COLOR_BGR2HSV)
-        h_channel = hsv[:, :, 0]
-        s_channel = hsv[:, :, 1]
-        v_channel = hsv[:, :, 2]
-        mask = StereoVisionUtils.calculate_mask(hsv, 
+        mask = StereoVisionUtils.calculate_mask(image, 
                                                 self.LOWER_BOUND_BLUE, 
                                                 self.UPPER_BOUND_BLUE)
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         circular_candidates = []
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area < 200:
+            if area == 0:
                 continue
-            ellipse = cv2.fitEllipse(cnt) if len(cnt) >= 5 else None
-            if ellipse:
-                (x, y), (major, minor), angle = ellipse
-                eccentricity = np.sqrt(1 - (minor / major) ** 2)
-                if 0.0 < eccentricity < 0.75 and 10 < major < 800:
-                    circular_candidates.append((x, y, major))
-                    
+            (x, y), radius = cv2.minEnclosingCircle(cnt)
+            if 5 < radius < 400:
+                circular_candidates.append((x, y, radius * 2))  
         if circular_candidates:
             largest = max(circular_candidates, key=lambda x: x[2])
             x_pixel, y_pixel, ball_pixel_diameter = largest
-            z = (self.target_size * self.focal_x) / ball_pixel_diameter
+            z = self.target_size * self.focal_x / ball_pixel_diameter
             x = ((x_pixel - self.principal_point_x) * z) / self.focal_x
             y = -((y_pixel - self.principal_point_y) * z) / self.focal_y
         return x, y, z
