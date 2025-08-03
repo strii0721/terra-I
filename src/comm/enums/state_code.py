@@ -19,8 +19,5 @@
 from enum import Enum
 
 class StateCode(Enum):
-    S_TRJ = "101"   # Server send trajectory
-    
-    C_COR = "201"   # Client send coordinate
-    
-    U_
+    S_TRJ = 101   # Server send trajectory
+    C_COR = 201   # Client send coordinate

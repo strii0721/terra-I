@@ -21,3 +21,7 @@ fprintf("Sent: %s", msg2);
 
 % === Close connection ===
 clear t
+
+classdef MyClass
+
+end

@@ -18,9 +18,9 @@
 
 import socket
 from queue import Queue
-from dk.logger.log4p import Log4P
 import json
 from comm.enums.state_code import StateCode
+import time
 
 class TcpAgent():
     
@@ -30,16 +30,15 @@ class TcpAgent():
         self.read_buffer = Queue()
         self.connection = None
         
-    def wait_connection(self) -> None:
+    def wait_connection(self) -> object:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            logger = Log4P()
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            s.bind(("0.0.0.0", self.port))
+            ip = "0.0.0.0"
+            s.bind((ip, self.port))
             s.listen(1)
-            logger.info(f"Waiting for connection on port {self.port}...")
-            connection, addr = s.accept()
+            connection, (address, _) = s.accept()
             self.connection = connection
-            logger.info(f"Connected by {addr}, start listening...")
+            return address
 
     def receive(self) -> tuple:
         if self.connection:
@@ -51,8 +50,8 @@ class TcpAgent():
                 if not packet:
                     raise ConnectionError("Connection terminated.")
                 payload += packet
-            payload = payload.decode()
-            payload_dict = json.loads(payload)
+            payload_jsonstr = payload.decode("utf-8")
+            payload_dict = json.loads(payload_jsonstr)
             return payload_dict["stat"], payload_dict["msg"]
     
     def send(self, 
@@ -60,17 +59,23 @@ class TcpAgent():
              msg:object) -> None:
         if self.connection:
             payload_dict = {}
-            payload_dict["stat"] = stat
+            payload_dict["stat"] = stat.value
             payload_dict["msg"] = msg
-            payload = json.dumps(payload_dict)
-            payload = payload.encode()
-            length = len(payload)
-            header = length.to_bytes(4, 'big')
+            payload_jsonstr = json.dumps(payload_dict)
+            payload = payload_jsonstr.encode("utf-8")
+            payload_length = len(payload)
+            header = payload_length.to_bytes(4, 'big')
             self.connection.sendall(header + payload)
             
 
     def wait_state(self, 
-                   target_state:StateCode) -> object:
-        stat, msg = self.receive()
-        if stat == target_state:
-            return msg
+                   target_state:StateCode, 
+                   timeout = -1) -> object:
+        time_start = time.time()
+        while True:
+            stat, msg = self.receive()
+            if stat == target_state.value:  
+                return msg
+            if time.time() - time_start > timeout and timeout != -1 :
+                return None
+            time.sleep(0.01)
