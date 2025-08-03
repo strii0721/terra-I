@@ -4,20 +4,28 @@ classdef TcpAgent
         ip
         port
         connection
-        S_TRJ = "101"   % Server send trajectory
-        C_COR = "201"   % Client send coordinate
+        S_TRJ = 101   % Server send trajectory
+        C_COR = 201   % Client send coordinate
     end
 
     methods
-        function obj = TcpAgent(ip, port)
+        function obj = TcpAgent(ip, port, connectionTimeout)
             obj.ip = ip;
             obj.port = port;
-            obj.connection = tcpclient(ip, port);
+            while toc(t_start) < timeout_seconds
+                try
+                    obj.connection = tcpclient(ip, port);
+                    connected = true;
+                    break;
+                catch
+                    pause(0.5);
+                end
+            end
         end
 
         function [stat, msg] = receive(obj)
             header = read(obj.connection, 4, 'uint8');
-            payloadLength = typecast(swapbytes(uint8(header)), 'uint32');
+            payloadLength = swapbytes(typecast(uint8(header), 'uint32'));
             payload = read(obj.connection, payloadLength, 'uint8');
             payloadJsonstr = char(payload);
             payloadStruct = jsondecode(payloadJsonstr);
@@ -33,9 +41,9 @@ classdef TcpAgent
             payloadJsonstr = jsonencode(payloadStruct);
             payload = uint8(payloadJsonstr);
             payloadLength = length(payload);
-            header = uint32(payloadLength);
-            write(obj.connection, header, )
-            write(obj.connection, payload)
+            header = typecast(swapbytes(uint32(payloadLength)), 'uint8');
+            write(obj.connection, header, "uint8")
+            write(obj.connection, payload, "uint8")
         end
 
         function msg  = waitState(obj, targetState, timeout)

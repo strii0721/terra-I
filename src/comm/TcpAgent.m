@@ -9,10 +9,28 @@ classdef TcpAgent
     end
 
     methods
-        function obj = TcpAgent(ip, port)
+        function obj = TcpAgent(ip, port, connectionTimeout)
             obj.ip = ip;
             obj.port = port;
-            obj.connection = tcpclient(ip, port);
+            if nargin < 3
+                connectionTimeout = 10;
+            end
+            timeStart = tic;
+            connected = false;
+            while toc(timeStart) < connectionTimeout
+                try
+                    obj.connection = tcpclient(ip, port);
+                    connected = true;
+                    break;
+                catch
+                    fprintf("Target host cannot be reached. Reconnecting...\n")
+                    pause(1);
+                end
+            end
+
+            if ~connected
+                error("Connection timeout");
+            end
         end
 
         function [stat, msg] = receive(obj)
