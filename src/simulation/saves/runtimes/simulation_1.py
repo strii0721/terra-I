@@ -16,9 +16,9 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-import visualizations.saves.statics.new_1 as CFG
+import simulation.saves.statics.new_1 as CFG
 from threading import Thread
-from visualizations.enums.render_object_types import RenderObjectTypes
+from simulation.enums.render_object_types import RenderObjectTypes
 
 from utils.kinematic_utils import KinematicUtils
 from math import pi
@@ -29,16 +29,16 @@ This simulation demonstrates the initialisation process of the robotic arm.
 '''
 
 # Variable Area #########################################################
-LEFT_STOP_0 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [0, 0, 0])["l-link_3-0"]
-LEFT_STOP_1 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [-pi/2, 0, -pi])["l-link_3-0"]
-LEFT_STOP_2 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [-pi/2, 0, -pi/2])["l-link_3-0"]
-LEFT_STOP_3 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [-pi/2, 0, 0])["l-link_3-0"]
-LEFT_ACTION_1 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [-pi/2, 0, pi/2])["l-link_3-0"]
+LEFT_STOP_0 = KinematicUtils.calculate_pose_matrix_dict(CFG.ARM, [0, 0, 0, 0])["l-link_3-0"]
+LEFT_STOP_1 = KinematicUtils.calculate_pose_matrix_dict(CFG.ARM, [0, -pi/2, 0, -pi])["l-link_3-0"]
+LEFT_STOP_2 = KinematicUtils.calculate_pose_matrix_dict(CFG.ARM, [0, -pi/2, 0, -pi/2])["l-link_3-0"]
+LEFT_STOP_3 = KinematicUtils.calculate_pose_matrix_dict(CFG.ARM, [0, -pi/2, 0, 0])["l-link_3-0"]
+LEFT_ACTION_1 = KinematicUtils.calculate_pose_matrix_dict(CFG.ARM, [0, -pi/2, 0, pi/2])["l-link_3-0"]
 l_target_pose_matrix_list = [
-    # LEFT_STOP_0,
-    # LEFT_STOP_1, 
-    # LEFT_STOP_2, 
-    # LEFT_STOP_3, 
+    LEFT_STOP_0,
+    LEFT_STOP_1, 
+    LEFT_STOP_2, 
+    LEFT_STOP_3, 
 ]
 
 #########################################################################
@@ -48,11 +48,11 @@ l_target_pose_matrix_list = [
 THREAD_LIST = [
     # Thread(target = CFG.L_CONTROLLER.listen_daemon, args = (CFG.L_LISTEN_LIST,)),
     # Thread(target = CFG.R_CONTROLLER.listen_daemon, args = (CFG.R_LISTEN_LIST,)),
-    Thread(target = CFG.L_CONTROLLER.route_input, args = (l_target_pose_matrix_list,
-                                                           KinematicUtils.tp_linear_joint_interpolation,
-                                                           "full",
-                                                           True,
-                                                           True)),
+    # Thread(target = CFG.L_CONTROLLER.route_input, args = (l_target_pose_matrix_list,
+    #                                                        KinematicUtils.tp_linear_joint_interpolation,
+    #                                                        "full",
+    #                                                        True,
+    #                                                        True)),
 ]
 def FRAME():
     CFG.RENDERER.clean_points()
@@ -60,7 +60,7 @@ def FRAME():
     CFG.RENDERER.clean_faces()
     
     CFG.RENDERER.add_faces(CFG.GROUND.retrieve_render_list(RenderObjectTypes.FACE))
-    CFG.RENDERER.add_lines(CFG.LEFT_ARM.retrieve_render_list(RenderObjectTypes.LINE))
+    CFG.RENDERER.add_lines(CFG.ARM.retrieve_render_list(RenderObjectTypes.LINE))
     
     CFG.RENDERER.render()
 ########################################################################

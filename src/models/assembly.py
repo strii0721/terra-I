@@ -18,7 +18,7 @@
 
 from abc import ABC, abstractmethod
 import pandas as pd
-from visualizations.enums.render_object_types import RenderObjectTypes
+from simulation.enums.render_object_types import RenderObjectTypes
 
 class Assembly(ABC):
     

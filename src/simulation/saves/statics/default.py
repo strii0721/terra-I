@@ -20,10 +20,10 @@ from models.impl.robotic_arm import RoboticArm
 from models.impl.link import Link
 from models.impl.rotational_joint import RotationalJoint
 import numpy as np
-from visualizations.renderer import Renderer
+from simulation.renderer import Renderer
 from models.impl.hull import Hull
 from math import pi
-from core.controllers.impl.simulation_controller import SimulationController
+from controllers.impl.simulation_controller import SimulationController
 from models.impl.target_point import TargetPoint
 
 CONTROL_INTERVAL = 0.1

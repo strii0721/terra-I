@@ -17,7 +17,7 @@
 #
 
 from models.assembly import Assembly
-from visualizations.enums.render_object_types import RenderObjectTypes
+from simulation.enums.render_object_types import RenderObjectTypes
 import pandas as pd
 
 class TargetPoint(Assembly):

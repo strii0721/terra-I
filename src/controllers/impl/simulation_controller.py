@@ -16,7 +16,7 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-from core.controllers.base_controller import BaseController
+from controllers.base_controller import BaseController
 from models.kinematic_computable_assembly import KinematicComputableAssembly
 import os
 from dk.logger.log4p import Log4P

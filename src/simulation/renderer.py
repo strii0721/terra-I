@@ -78,10 +78,10 @@ class Renderer:
         self.ax.set_box_aspect([x_max - x_min,
                                 y_max - y_min,
                                 z_max - z_min])
-        self.ax.set_xticks([])
-        self.ax.xaxis.set_major_locator(MultipleLocator(50))
-        self.ax.yaxis.set_major_locator(MultipleLocator(50))
-        self.ax.zaxis.set_major_locator(MultipleLocator(50))
+        # self.ax.set_xticks([])
+        self.ax.xaxis.set_major_locator(MultipleLocator(0.100))
+        self.ax.yaxis.set_major_locator(MultipleLocator(0.100))
+        self.ax.zaxis.set_major_locator(MultipleLocator(0.100))
         self.ax.set_xlabel('X')
         self.ax.set_ylabel('Y')
         self.ax.set_zlabel('Z')

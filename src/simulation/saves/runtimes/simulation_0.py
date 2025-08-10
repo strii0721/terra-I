@@ -16,9 +16,9 @@
 # Copyright (c) 2025 S.I.C.
 #
 
-import visualizations.saves.statics.default as CFG
+import simulation.saves.statics.default as CFG
 from threading import Thread
-from visualizations.enums.render_object_types import RenderObjectTypes
+from simulation.enums.render_object_types import RenderObjectTypes
 
 from utils.kinematic_utils import KinematicUtils
 from math import pi
@@ -37,11 +37,11 @@ LEFT_STOP_2 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [-pi/2, 0,
 LEFT_STOP_3 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [-pi/2, 0, 0])["l-link_3-0"]
 LEFT_ACTION_1 = KinematicUtils.calculate_pose_matrix_dict(CFG.LEFT_ARM, [-pi/2, 0, pi/2])["l-link_3-0"]
 l_target_pose_matrix_list = [
-    # LEFT_STOP_0,
+    LEFT_STOP_0,
     LEFT_STOP_1, 
     LEFT_STOP_2, 
     LEFT_STOP_3, 
-    # LEFT_ACTION_1,
+    LEFT_ACTION_1,
     TARGET_1,
     TARGET_2
 ]
@@ -51,12 +51,12 @@ RIGHT_STOP_2 = KinematicUtils.calculate_pose_matrix_dict(CFG.RIGHT_ARM, [pi/2, 0
 RIGHT_STOP_3 = KinematicUtils.calculate_pose_matrix_dict(CFG.RIGHT_ARM, [pi/2, 0, 4*pi/2])["r-link_3-0"]
 RIGHT_ACTION_1 = KinematicUtils.calculate_pose_matrix_dict(CFG.RIGHT_ARM, [pi/2, 0, 5*pi/2])["r-link_3-0"]
 r_target_pose_matrix_list = [
-    # RIGHT_STOP_0, 
+    RIGHT_STOP_0, 
     RIGHT_STOP_0, 
     RIGHT_STOP_1, 
     RIGHT_STOP_2, 
     RIGHT_STOP_3, 
-    # RIGHT_ACTION_1,
+    RIGHT_ACTION_1,
     TARGET_1,
     TARGET_2
 ]
@@ -68,11 +68,11 @@ r_target_pose_matrix_list = [
 THREAD_LIST = [
     # Thread(target = CFG.L_CONTROLLER.listen_daemon, args = (CFG.L_LISTEN_LIST,)),
     # Thread(target = CFG.R_CONTROLLER.listen_daemon, args = (CFG.R_LISTEN_LIST,)),
-    Thread(target = CFG.L_CONTROLLER.route_input, args = (l_target_pose_matrix_list,
-                                                           KinematicUtils.tp_linear_joint_interpolation,
-                                                           "full",
-                                                           True,
-                                                           False)),
+    # Thread(target = CFG.L_CONTROLLER.route_input, args = (l_target_pose_matrix_list,
+    #                                                        KinematicUtils.tp_linear_joint_interpolation,
+    #                                                        "full",
+    #                                                        True,
+    #                                                        False)),
     # Thread(target = CFG.R_CONTROLLER.route_input, args = (r_target_pose_matrix_list,
     #                                                        KinematicUtils.tp_linear_joint_interpolation,
     #                                                        "full",
@@ -84,9 +84,9 @@ def FRAME():
     CFG.RENDERER.clean_lines()
     CFG.RENDERER.clean_faces()
     
-    CFG.RENDERER.add_faces(CFG.HULL.retrieve_render_list(RenderObjectTypes.FACE))
-    CFG.RENDERER.add_points(CFG.TARGET_1.retrieve_render_list(RenderObjectTypes.POINT))
-    CFG.RENDERER.add_points(CFG.TARGET_2.retrieve_render_list(RenderObjectTypes.POINT))
+    # CFG.RENDERER.add_faces(CFG.HULL.retrieve_render_list(RenderObjectTypes.FACE))
+    # CFG.RENDERER.add_points(CFG.TARGET_1.retrieve_render_list(RenderObjectTypes.POINT))
+    # CFG.RENDERER.add_points(CFG.TARGET_2.retrieve_render_list(RenderObjectTypes.POINT))
     CFG.RENDERER.add_lines(CFG.LEFT_ARM.retrieve_render_list(RenderObjectTypes.LINE))
     CFG.RENDERER.add_lines(CFG.RIGHT_ARM.retrieve_render_list(RenderObjectTypes.LINE))
     

@@ -20,10 +20,10 @@ from models.impl.robotic_arm import RoboticArm
 from models.impl.link import Link
 from models.impl.rotational_joint import RotationalJoint
 import numpy as np
-from visualizations.renderer import Renderer
+from simulation.renderer import Renderer
 from models.impl.ground import Ground
 from math import pi
-from kinematics.controllers.impl.simulation_controller import SimulationController
+from controllers.impl.simulation_controller import SimulationController
 
 CONTROL_INTERVAL = 0.1
 RENDER_INTERVAL = 0.1
@@ -40,15 +40,16 @@ L_LISTEN_LIST = [
     "l-link_3-0"
 ]
 GROUND = Ground()
-LEFT_ARM = RoboticArm()\
+ARM = RoboticArm()\
+    .construct(RotationalJoint("la-j0", np.array([0, 0, 1]), initial_control_variable = 0))\
     .construct(Link("l-link_0-0", np.array([0.000000, 0.000000, 0.110000])))\
-    .construct(RotationalJoint("la-j1", np.array([0, 1, 0]), initial_control_variable = pi/6))\
+    .construct(RotationalJoint("la-j1", np.array([0, 1, 0]), initial_control_variable = -pi/3))\
     .construct(Link("l-link_1-0", np.array([0.000000, -0.085000, 0.000000])))\
-    .construct(RotationalJoint("la-j2", np.array([0, 0, 1]), initial_control_variable = 0))\
+    .construct(RotationalJoint("la-j2", np.array([0, 0, 1]), initial_control_variable = pi/3))\
     .construct(Link("l-link_2-2", np.array([0.085000, 0.000000, 0.000000])))\
-    .construct(RotationalJoint("la-j3", np.array([0, 0, 1]), initial_control_variable = 0))\
+    .construct(RotationalJoint("la-j3", np.array([0, 0, 1]), initial_control_variable = pi/2))\
     .construct(Link("l-link_3-0", np.array([0.085000, 0.000000, 0.000000])))
-L_CONTROLLER = SimulationController(LEFT_ARM, control_interval = CONTROL_INTERVAL)\
+L_CONTROLLER = SimulationController(ARM, control_interval = CONTROL_INTERVAL)\
     .initialize()\
     .bind_inverse_kinematic_analysis_basis(L_INVERSE_KINEMATIC_ANALYSIS_BASIS)
 RENDERER = Renderer(render_interval = RENDER_INTERVAL)

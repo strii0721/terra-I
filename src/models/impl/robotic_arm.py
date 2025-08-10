@@ -18,7 +18,7 @@
 
 from models.kinematic_computable_assembly import KinematicComputableAssembly
 import pandas as pd
-from visualizations.enums.render_object_types import RenderObjectTypes
+from simulation.enums.render_object_types import RenderObjectTypes
 from utils.data_frame_utils import DataFrameUtils
 from models.enums.part_types import PartTypes
 from models.impl.reference_frame import ReferenceFrame
